@@ -5,8 +5,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-
-
 public class RegistrazioneUI {
     public void start(Stage stage) {
         stage.setTitle("UninaTaskBoard - Registrazione");
