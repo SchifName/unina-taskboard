@@ -1,4 +1,5 @@
 package unina.project.gui;
+
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -6,7 +7,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class LoginUI extends Application{
+public class LoginUI extends Application {
     @Override
     public void start(Stage stage) {
         stage.setTitle("UninaTaskBoard - Login");
@@ -46,5 +47,4 @@ public class LoginUI extends Application{
     public static void main(String[] args) {
         launch(args);
     }
-}
 }

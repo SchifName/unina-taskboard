@@ -1,13 +1,14 @@
 package unina.project.gui;
 
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.stageimport.Stage;
-import javafx.geometry.Insets;
+import javafx.stage.Stage;
 
-public class DashboardProgettiUI {
+public class DashboardProgettiUI extends Application {
+
     @Override
     public void start(Stage stage) {
         stage.setTitle("unina-taskboard - I Miei Progetti");
@@ -62,5 +63,4 @@ public class DashboardProgettiUI {
     public static void main(String[] args) {
         launch(args);
     }
-}
 }
