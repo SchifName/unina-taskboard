@@ -40,7 +40,7 @@
                 <version>0.0.8</version>
 
                 <configuration>
-                    <mainClass>your.package.MainApp</mainClass>
+                    <mainClass> unina.project.gui.AutenticazioneController</mainClass>
                 </configuration>
             </plugin>
         </plugins>
