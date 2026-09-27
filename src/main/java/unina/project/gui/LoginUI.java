@@ -8,40 +8,51 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class LoginUI extends Application {
+
     @Override
     public void start(Stage stage) {
-        stage.setTitle("UninaTaskBoard - Login");
+        stage.setTitle("UninaTaskBoard - Accesso");
+
+        VBox root = new VBox(12);
+        root.setPadding(new Insets(25));
+
+        Label titolo = new Label("Accedi a UninaTaskBoard");
+        titolo.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
         TextField txtEmail = new TextField();
-        txtEmail.setPromptText("Email");
+        txtEmail.setPromptText("Email istituzionale (@unina.it)");
 
         PasswordField txtPassword = new PasswordField();
         txtPassword.setPromptText("Password");
 
-        Button btnLogin = new Button("Accedi");
-        Button btnRegistrati = new Button("Vai alla Registrazione");
-        Label lblMsg = new Label();
+        Button btnAccedi = new Button("Accedi");
+        Button btnVaiRegistrazione = new Button("Non hai un account? Registrati");
+        Label lblMessaggio = new Label();
 
-        // Azione Login -> Apre la Dashboard
-        btnLogin.setOnAction(e -> {
-            if (txtEmail.getText().isEmpty() || txtPassword.getText().isEmpty()) {
-                lblMsg.setText("Compila tutti i campi.");
-            } else {
-                new DashboardProgettiUI().mostra(new Stage());
-                stage.close();
+        // Azione Login
+        btnAccedi.setOnAction(e -> {
+            String email = txtEmail.getText().trim();
+            String password = txtPassword.getText();
+
+            if (email.isEmpty() || password.isEmpty()) {
+                lblMessaggio.setText("Compila tutti i campi!");
+                return;
             }
-        });
 
-        // Apre la Registrazione
-        btnRegistrati.setOnAction(e -> {
-            new RegistrazioneUI().mostra(new Stage());
+            // Simulazione login riuscito -> apre la Dashboard
             stage.close();
+            new DashboardProgettiUI("Mario Rossi", "Studente").start(new Stage());
         });
 
-        VBox root = new VBox(10, new Label("Accedi"), txtEmail, txtPassword, btnLogin, btnRegistrati, lblMsg);
-        root.setPadding(new Insets(20));
+        // Pulsante per aprire la schermata di Registrazione separata
+        btnVaiRegistrazione.setOnAction(e -> {
+            stage.close(); // Chiude il login
+            new RegistrazioneUI().start(new Stage()); // Apre la registrazione
+        });
 
-        stage.setScene(new Scene(root, 300, 300));
+        root.getChildren().addAll(titolo, txtEmail, txtPassword, btnAccedi, btnVaiRegistrazione, lblMessaggio);
+
+        stage.setScene(new Scene(root, 320, 320));
         stage.show();
     }
 

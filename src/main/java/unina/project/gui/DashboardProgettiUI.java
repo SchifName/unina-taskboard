@@ -1,71 +1,93 @@
 package unina.project.gui;
 
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-public class DashboardProgettiUI extends Application {
+public class DashboardProgettiUI {
+    private String nome, ruolo;
+    private boolean isDark = false;
 
-    // Metodo di compatibilità per evitare errori se richiamato da altre classi con .mostra()
-    public void mostra(Stage stage) {
-        start(stage);
+    public DashboardProgettiUI(String nome, String ruolo) {
+        this.nome = nome;
+        this.ruolo = ruolo;
     }
 
-    @Override
     public void start(Stage stage) {
-        stage.setTitle("unina-taskboard - I Miei Progetti");
+        stage.setTitle("Dashboard - " + ruolo);
+        BorderPane root = new BorderPane();
 
-        Label lblTitolo = new Label("Progetti Disponibili");
+        // Sezione Progetti
+        ListView<String> lista = new ListView<>();
+        lista.getItems().addAll("Progetto 1", "Progetto 2");
 
-        // Lista dei progetti a cui l'utente partecipa
-        ListView<String> listaProgetti = new ListView<>();
-        listaProgetti.getItems().addAll(
-                "Progetto Esame OOP - Sviluppo App",
-                "Progetto Basi di Dati - Gestione Libreria",
-                "Progetto Reti - Chat Client/Server"
-        );
+        Button btnCreaProgetto = new Button("Crea Progetto");
+        Button btnEliminaProgetto = new Button("Elimina Progetto");
 
-        Button btnApriProgetto = new Button("Accedi al Progetto Selezionato");
-        Button btnNuovoProgetto = new Button("Crea Nuovo Progetto");
-        Label lblMsg = new Label();
-
-        // Azione per aprire il progetto selezionato
-        btnApriProgetto.setOnAction(e -> {
-            String selezionato = listaProgetti.getSelectionModel().getSelectedItem();
-            if (selezionato != null) {
-                lblMsg.setText("Apertura di: " + selezionato);
-                // TODO: Qui puoi aprire la schermata delle attività del progetto
-            } else {
-                lblMsg.setText("Seleziona prima un progetto dalla lista.");
-            }
-        });
-
-        // Azione per creare un nuovo progetto (semplificata)
-        btnNuovoProgetto.setOnAction(e -> {
+        // Azione per creare un nuovo progetto inserendo il nome
+        btnCreaProgetto.setOnAction(e -> {
             TextInputDialog dialog = new TextInputDialog();
             dialog.setTitle("Nuovo Progetto");
-            dialog.setHeaderText("Crea un nuovo progetto collaborativo");
-            dialog.setContentText("Nome del progetto:");
+            dialog.setHeaderText("Inserisci il nome del nuovo progetto:");
+            dialog.setContentText("Nome:");
 
             dialog.showAndWait().ifPresent(nomeProgetto -> {
                 if (!nomeProgetto.trim().isEmpty()) {
-                    listaProgetti.getItems().add(nomeProgetto);
-                    lblMsg.setText("Progetto '" + nomeProgetto + "' creato con successo!");
+                    lista.getItems().add(nomeProgetto.trim());
                 }
             });
         });
 
-        VBox root = new VBox(10, lblTitolo, listaProgetti, btnApriProgetto, btnNuovoProgetto, lblMsg);
-        root.setPadding(new Insets(20));
+        // Azione per eliminare il progetto selezionato
+        btnEliminaProgetto.setOnAction(e -> {
+            String selezionato = lista.getSelectionModel().getSelectedItem();
+            if (selezionato != null) {
+                lista.getItems().remove(selezionato);
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING, "Seleziona prima un progetto da eliminare.");
+                alert.showAndWait();
+            }
+        });
 
-        stage.setScene(new Scene(root, 350, 400));
+        HBox boxBottoni = new HBox(10, btnCreaProgetto, btnEliminaProgetto);
+        VBox boxProj = new VBox(10, new Label("Gestione Progetti"), boxBottoni, lista);
+        boxProj.setPadding(new Insets(10));
+
+        // Sezione Profilo
+        VBox boxProf = new VBox(10, new Label("Profilo"), new Label("Nome: " + nome), new Label("Ruolo: " + ruolo));
+        boxProf.setPadding(new Insets(10));
+
+        // Sezione Impostazioni & Dark Mode
+        CheckBox chkDark = new CheckBox("Modalità Oscura");
+        chkDark.setOnAction(e -> {
+            isDark = chkDark.isSelected();
+            String bg = isDark ? "-fx-background-color: #222; -fx-text-fill: white;" : "";
+            root.setStyle(bg);
+            boxProj.setStyle(bg);
+            boxProf.setStyle(bg);
+        });
+        VBox boxSet = new VBox(10, new Label("Impostazioni"), chkDark);
+        boxSet.setPadding(new Insets(10));
+
+        // Menu Laterale (Sidebar)
+        Hyperlink p = new Hyperlink("Progetti");
+        Hyperlink prof = new Hyperlink("Profilo");
+        Hyperlink set = new Hyperlink("Impostazioni");
+        Hyperlink esc = new Hyperlink("Esci");
+
+        p.setOnAction(e -> root.setCenter(boxProj));
+        prof.setOnAction(e -> root.setCenter(boxProf));
+        set.setOnAction(e -> root.setCenter(boxSet));
+        esc.setOnAction(e -> stage.close());
+
+        VBox sidebar = new VBox(10, new Label("MENU"), p, prof, set, new Separator(), esc);
+        sidebar.setPadding(new Insets(10));
+
+        root.setLeft(sidebar);
+        root.setCenter(boxProj);
+        stage.setScene(new Scene(root, 550, 320));
         stage.show();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }
