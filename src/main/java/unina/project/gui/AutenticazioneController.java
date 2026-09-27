@@ -1,63 +1,56 @@
 package unina.project.gui;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-/**
- * Controller EBC per la gestione della logica di autenticazione, registrazione
- * e dei progetti all'interno della piattaforma UninaTaskBoard.
- */
 public class AutenticazioneController {
 
-    // Lista temporanea in memoria per testare i progetti senza database per ora
-    private static List<String> progettiMemoria = new ArrayList<>(List.of("Progetto Esame SINF", "Sviluppo TaskBoard"));
+    // Database temporaneo in memoria per far funzionare tutto subito senza errori
+    private static final Map<String, String> utentiPassword = new HashMap<>();
+    private static final Map<String, String[]> utentiInfo = new HashMap<>();
+    private static final List<String> progettiMemoria = new ArrayList<>(List.of("Progetto Esame OOP", "Sviluppo TaskBoard"));
 
-    /**
-     * Gestisce la logica di verifica delle credenziali per il login.
-     */
     public boolean effettuaLogin(String email, String password) {
-        if (email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty()) {
-            return false;
+        if (email == null || password == null) return false;
+
+        email = email.trim();
+
+        // Se l'utente è stato appena registrato in questa sessione
+        if (utentiPassword.containsKey(email) && utentiPassword.get(email).equals(password)) {
+            return true;
         }
 
-        // TODO: Inserire qui la query JDBC verso il database (es. SELECT * FROM Utente WHERE email = ? AND password = ?)
-        boolean isEmailValida = email.contains("@unina.it") || email.contains("@");
-        return isEmailValida && password.length() >= 4;
+        // Accesso libero di test per qualsiasi email @unina.it se non ti sei ancora registrato
+        return email.endsWith("@unina.it") && !password.isEmpty();
     }
 
-    /**
-     * Gestisce la logica di registrazione di un nuovo utente nel sistema.
-     */
-    public boolean registraUtente(String nome, String email, String password) {
-        if (nome == null || nome.trim().isEmpty()) {
-            return false;
+    public boolean registraUtente(String nome, String email, String password, String ruolo) {
+        if (nome != null && !nome.trim().isEmpty() && email != null && email.contains("@unina.it") && password != null && !password.isEmpty()) {
+            email = email.trim();
+            utentiPassword.put(email, password);
+            utentiInfo.put(email, new String[]{nome.trim(), ruolo});
+            return true;
         }
-        if (email == null || !email.contains("@unina.it")) {
-            return false;
-        }
-        if (password == null || password.length() < 6) {
-            return false;
-        }
-
-        // TODO: Inserire qui l'istruzione SQL di inserimento (INSERT INTO Utente...)
-        return true;
+        return false;
     }
 
-    /**
-     * Restituisce l'elenco dei progetti associati all'utente.
-     */
+    public String[] getInfoUtente(String email) {
+        if (email != null && utentiInfo.containsKey(email.trim())) {
+            return utentiInfo.get(email.trim());
+        }
+        // Dati di default se fai il login rapido di test
+        return new String[] { "Mario Rossi", "Studente" };
+    }
+
     public List<String> getNomiProgettiUtente() {
-        // TODO: In seguito qui inserisci la query JDBC per leggerli da PostgreSQL
         return progettiMemoria;
     }
 
-    /**
-     * Crea un nuovo progetto aggiungendolo al sistema.
-     */
     public void creaNuovoProgetto(String nome) {
         if (nome != null && !nome.trim().isEmpty()) {
-            progettiMemoria.add(nome);
-            // TODO: In seguito qui inserisci la INSERT SQL su PostgreSQL
+            progettiMemoria.add(nome.trim());
         }
     }
 }
