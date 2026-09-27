@@ -7,9 +7,10 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 public class DashboardProgettiUI {
-    private String nome, ruolo;
-    private boolean isDark = false;
+    private final String nome, ruolo;
+    private boolean isDark;
 
+    // Costruttore per ricevere i dati dell'utente loggato
     public DashboardProgettiUI(String nome, String ruolo) {
         this.nome = nome;
         this.ruolo = ruolo;
@@ -19,75 +20,94 @@ public class DashboardProgettiUI {
         stage.setTitle("Dashboard - " + ruolo);
         BorderPane root = new BorderPane();
 
-        // Sezione Progetti
+        // ==========================================
+        // 1. SEZIONE GESTIONE PROGETTI
+        // ==========================================
         ListView<String> lista = new ListView<>();
         lista.getItems().addAll("Progetto 1", "Progetto 2");
 
-        Button btnCreaProgetto = new Button("Crea Progetto");
-        Button btnEliminaProgetto = new Button("Elimina Progetto");
+        Button btnCrea = new Button("Crea"), btnMod = new Button("Modifica"), btnDel = new Button("Elimina");
 
-        // Azione per creare un nuovo progetto inserendo il nome
-        btnCreaProgetto.setOnAction(e -> {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Nuovo Progetto");
-            dialog.setHeaderText("Inserisci il nome del nuovo progetto:");
-            dialog.setContentText("Nome:");
+        // Azione per creare un nuovo progetto
+        btnCrea.setOnAction(e -> new TextInputDialog().showAndWait().ifPresent(s -> {
+            if (!s.isBlank()) lista.getItems().add(s.trim());
+        }));
 
-            dialog.showAndWait().ifPresent(nomeProgetto -> {
-                if (!nomeProgetto.trim().isEmpty()) {
-                    lista.getItems().add(nomeProgetto.trim());
-                }
-            });
+        // Azione per modificare il progetto selezionato
+        btnMod.setOnAction(e -> {
+            String sel = lista.getSelectionModel().getSelectedItem();
+            if (sel != null) {
+                new TextInputDialog(sel).showAndWait().ifPresent(s -> {
+                    if (!s.isBlank()) lista.getItems().set(lista.getSelectionModel().getSelectedIndex(), s.trim());
+                });
+            } else new Alert(Alert.AlertType.WARNING, "Seleziona prima un progetto.").show();
         });
 
         // Azione per eliminare il progetto selezionato
-        btnEliminaProgetto.setOnAction(e -> {
-            String selezionato = lista.getSelectionModel().getSelectedItem();
-            if (selezionato != null) {
-                lista.getItems().remove(selezionato);
-            } else {
-                Alert alert = new Alert(Alert.AlertType.WARNING, "Seleziona prima un progetto da eliminare.");
-                alert.showAndWait();
-            }
+        btnDel.setOnAction(e -> {
+            String sel = lista.getSelectionModel().getSelectedItem();
+            if (sel != null) lista.getItems().remove(sel);
+            else new Alert(Alert.AlertType.WARNING, "Seleziona prima un progetto.").show();
         });
 
-        HBox boxBottoni = new HBox(10, btnCreaProgetto, btnEliminaProgetto);
-        VBox boxProj = new VBox(10, new Label("Gestione Progetti"), boxBottoni, lista);
+        VBox boxProj = new VBox(10, new Label("Gestione Progetti"), new HBox(10, btnCrea, btnMod, btnDel), lista);
         boxProj.setPadding(new Insets(10));
 
-        // Sezione Profilo
+        // ==========================================
+        // 2. SEZIONE PROFILO UTENTE
+        // ==========================================
         VBox boxProf = new VBox(10, new Label("Profilo"), new Label("Nome: " + nome), new Label("Ruolo: " + ruolo));
         boxProf.setPadding(new Insets(10));
 
-        // Sezione Impostazioni & Dark Mode
+        // ==========================================
+        // 3. SEZIONE IMPOSTAZIONI E TEMI
+        // ==========================================
         CheckBox chkDark = new CheckBox("Modalità Oscura");
-        chkDark.setOnAction(e -> {
+        Slider slider = new Slider(10, 20, 12);
+        ChoiceBox<String> tema = new ChoiceBox<>();
+        tema.getItems().addAll("Standard", "Blu Accento", "Verde Natura");
+        tema.setValue("Standard");
+
+        // Logica dinamica per aggiornare i colori e la dimensione del testo
+        Runnable aggiorna = () -> {
             isDark = chkDark.isSelected();
-            String bg = isDark ? "-fx-background-color: #222; -fx-text-fill: white;" : "";
-            root.setStyle(bg);
-            boxProj.setStyle(bg);
-            boxProf.setStyle(bg);
-        });
-        VBox boxSet = new VBox(10, new Label("Impostazioni"), chkDark);
+            String bg = isDark ? "-fx-background-color: #222; -fx-text-fill: #61dafb;" : "-fx-background-color: #f4f4f4;";
+            if ("Blu Accento".equals(tema.getValue())) bg = isDark ? "-fx-background-color: #1a2536; -fx-text-fill: #61dafb;" : "-fx-background-color: #e3f2fd;";
+            else if ("Verde Natura".equals(tema.getValue())) bg = isDark ? "-fx-background-color: #1b3022; -fx-text-fill: #81c784;" : "-fx-background-color: #e8f5e9;";
+
+            String style = bg + " -fx-font-size: " + slider.getValue() + "px;";
+            root.setStyle(style); boxProj.setStyle(style); boxProf.setStyle(style);
+        };
+
+        chkDark.setOnAction(e -> aggiorna.run());
+        slider.valueProperty().addListener(e -> aggiorna.run());
+        tema.setOnAction(e -> aggiorna.run());
+
+        VBox boxSet = new VBox(10, new Label("Impostazioni"), chkDark, new CheckBox("Notifiche Push"), new Label("Dimensione Testo:"), slider, new Label("Tema:"), tema);
         boxSet.setPadding(new Insets(10));
 
-        // Menu Laterale (Sidebar)
-        Hyperlink p = new Hyperlink("Progetti");
-        Hyperlink prof = new Hyperlink("Profilo");
-        Hyperlink set = new Hyperlink("Impostazioni");
-        Hyperlink esc = new Hyperlink("Esci");
+        // ==========================================
+        // 4. MENU LATERALE (SIDEBAR)
+        // ==========================================
+        // Stile per mantenere le scritte celesti fisse e senza sbiadire
+        String sStyle = "-fx-background-color: transparent; -fx-text-fill: #61dafb; -fx-cursor: hand; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT;";
+        Button bP = new Button("Progetti"), bProf = new Button("Profilo"), bSet = new Button("Impostazioni"), bEsc = new Button("Esci");
+        for (Button b : new Button[]{bP, bProf, bSet, bEsc}) b.setStyle(sStyle);
 
-        p.setOnAction(e -> root.setCenter(boxProj));
-        prof.setOnAction(e -> root.setCenter(boxProf));
-        set.setOnAction(e -> root.setCenter(boxSet));
-        esc.setOnAction(e -> stage.close());
+        // Collegamento dei bottoni del menu alle varie schermate centrali
+        bP.setOnAction(e -> root.setCenter(boxProj));
+        bProf.setOnAction(e -> root.setCenter(boxProf));
+        bSet.setOnAction(e -> root.setCenter(boxSet));
+        bEsc.setOnAction(e -> stage.close());
 
-        VBox sidebar = new VBox(10, new Label("MENU"), p, prof, set, new Separator(), esc);
+        VBox sidebar = new VBox(10, new Label("MENU"), bP, bProf, bSet, new Separator(), bEsc);
         sidebar.setPadding(new Insets(10));
+        sidebar.setStyle("-fx-background-color: #1a1a1a;");
 
+        // Assemblaggio finale del layout principale
         root.setLeft(sidebar);
         root.setCenter(boxProj);
-        stage.setScene(new Scene(root, 550, 320));
+        stage.setScene(new Scene(root, 650, 400));
         stage.show();
     }
 }
