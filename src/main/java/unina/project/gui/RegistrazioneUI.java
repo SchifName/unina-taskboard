@@ -1,4 +1,5 @@
 package unina.project.gui;
+
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -6,7 +7,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class RegistrazioneUI {
-    public void start(Stage stage) {
+
+    // Cambiato da start() a mostra() per evitare conflitti con Application
+    public void mostra(Stage stage) {
         stage.setTitle("UninaTaskBoard - Registrazione");
 
         TextField txtNome = new TextField();
@@ -31,10 +34,15 @@ public class RegistrazioneUI {
             }
         });
 
-        // Torna alla schermata di login
+        // Torna alla schermata di login (qui richiamiamo il LoginUI esistente)
         btnTorna.setOnAction(e -> {
-            new LoginUI().start(new Stage());
-            stage.close();
+            LoginUI login = new LoginUI();
+            try {
+                login.start(new Stage());
+                stage.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         });
 
         VBox root = new VBox(10, new Label("Registrazione"), txtNome, txtEmail, txtPassword, btnRegistra, btnTorna, lblMsg);

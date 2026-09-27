@@ -40,7 +40,7 @@
                 <version>0.0.8</version>
 
                 <configuration>
-                    <mainClass> unina.project.gui.AutenticazioneController</mainClass>
+                    <mainClass> unina.project.gui.LoginUI</mainClass>
                 </configuration>
             </plugin>
         </plugins>

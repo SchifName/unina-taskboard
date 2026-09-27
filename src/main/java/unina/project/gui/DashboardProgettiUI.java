@@ -9,6 +9,11 @@ import javafx.stage.Stage;
 
 public class DashboardProgettiUI extends Application {
 
+    // Metodo di compatibilità per evitare errori se richiamato da altre classi con .mostra()
+    public void mostra(Stage stage) {
+        start(stage);
+    }
+
     @Override
     public void start(Stage stage) {
         stage.setTitle("unina-taskboard - I Miei Progetti");

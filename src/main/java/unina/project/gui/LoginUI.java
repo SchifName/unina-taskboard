@@ -22,18 +22,19 @@ public class LoginUI extends Application {
         Button btnRegistrati = new Button("Vai alla Registrazione");
         Label lblMsg = new Label();
 
-        // Azione Login
+        // Azione Login -> Apre la Dashboard
         btnLogin.setOnAction(e -> {
             if (txtEmail.getText().isEmpty() || txtPassword.getText().isEmpty()) {
                 lblMsg.setText("Compila tutti i campi.");
             } else {
-                lblMsg.setText("Login effettuato!");
+                new DashboardProgettiUI().mostra(new Stage());
+                stage.close();
             }
         });
 
-        // Apre la schermata di registrazione
+        // Apre la Registrazione
         btnRegistrati.setOnAction(e -> {
-            new RegistrazioneUI().start(new Stage());
+            new RegistrazioneUI().mostra(new Stage());
             stage.close();
         });
 
