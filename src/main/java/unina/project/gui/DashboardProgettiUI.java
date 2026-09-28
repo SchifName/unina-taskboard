@@ -15,18 +15,16 @@ public class DashboardProgettiUI {
     private final String ruoloUtente;
     private final List<String> listaProgettiMemoria = new ArrayList<>(List.of("Progetto Esame OOP", "Sviluppo App Mobile"));
 
-    // Costruttore che riceve l'email inviata da LoginUI
     public DashboardProgettiUI(String emailUtente) {
         this.emailUtente = emailUtente;
         this.nomeUtente = emailUtente.contains("@") ? emailUtente.split("@")[0] : "Mario Rossi";
-        this.ruoloUtente = "Studente"; // Puoi gestirlo dinamicamente se necessario
+        this.ruoloUtente = "Studente";
     }
 
     public void start(Stage stage) {
         stage.setTitle("UninaTaskBoard - Dashboard (" + ruoloUtente + ")");
         BorderPane root = new BorderPane();
 
-        // Stili per il testo celeste (#61dafb)
         String stileCeleste = "-fx-text-fill: #61dafb;";
         String stileTitolo = "-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;";
 
@@ -43,7 +41,6 @@ public class DashboardProgettiUI {
             dialog.setTitle("Nuovo Progetto");
             dialog.setHeaderText("Crea un nuovo progetto collaborativo");
             dialog.setContentText("Nome del progetto:");
-
             dialog.showAndWait().ifPresent(nome -> {
                 if (!nome.trim().isEmpty()) {
                     listaProgettiMemoria.add(nome.trim());
@@ -57,9 +54,7 @@ public class DashboardProgettiUI {
             if (selezionato != null) {
                 TextInputDialog dialog = new TextInputDialog(selezionato);
                 dialog.setTitle("Modifica Progetto");
-                dialog.setHeaderText("Modifica il nome del progetto");
                 dialog.setContentText("Nuovo nome:");
-
                 dialog.showAndWait().ifPresent(nuovoNome -> {
                     if (!nuovoNome.trim().isEmpty()) {
                         int index = listViewProgetti.getSelectionModel().getSelectedIndex();
@@ -88,7 +83,7 @@ public class DashboardProgettiUI {
         VBox boxProgetti = new VBox(10, lblTitoloProj, boxBottoni, listViewProgetti);
         boxProgetti.setPadding(new Insets(15));
 
-        // 2. PANNELLO PROFILO (Scritte celesti)
+        // 2. PANNELLO PROFILO
         Label lblProfTitolo = new Label("Informazioni Profilo Utente");
         lblProfTitolo.setStyle(stileTitolo);
         Label lblNome = new Label("Nome account: " + nomeUtente);
@@ -102,7 +97,32 @@ public class DashboardProgettiUI {
         VBox boxProfilo = new VBox(10, lblProfTitolo, lblNome, lblRuolo, lblEmail);
         boxProfilo.setPadding(new Insets(15));
 
-        // 3. PANNELLO IMPOSTAZIONI (Scritte e checkbox celesti)
+        // 3. PANNELLO REPORT ATTIVITÀ (Nuova funzionalità richiesta dalla traccia)[cite: 1]
+        Label lblReportTitolo = new Label("Report e Statistiche Attività");
+        lblReportTitolo.setStyle(stileTitolo);
+
+        TextArea txtAreaReport = new TextArea();
+        txtAreaReport.setEditable(false);
+        txtAreaReport.setText(
+                "=== REPORT PROGETTI UNINATASKBOARD ===\n\n" +
+                        "📁 Progetto: Progetto Esame OOP\n" +
+                        " - Totale Attività: 8\n" +
+                        " - Completate: 3\n" +
+                        " - In Corso: 3\n" +
+                        " - Non Iniziate: 2\n" +
+                        " - Attività di Sviluppo: 4\n\n" +
+                        "📁 Progetto: Sviluppo App Mobile\n" +
+                        " - Totale Attività: 5\n" +
+                        " - Completate: 1\n" +
+                        " - In Corso: 2\n" +
+                        " - Non Iniziate: 2\n" +
+                        " - Attività di Sviluppo: 3"
+        );
+        txtAreaReport.setStyle("-fx-font-family: monospace;");
+        VBox boxReport = new VBox(10, lblReportTitolo, txtAreaReport);
+        boxReport.setPadding(new Insets(15));
+
+        // 4. PANNELLO IMPOSTAZIONI
         Label lblSetTitolo = new Label("Impostazioni di Sistema");
         lblSetTitolo.setStyle(stileTitolo);
 
@@ -132,21 +152,24 @@ public class DashboardProgettiUI {
         VBox boxImpostazioni = new VBox(10, lblSetTitolo, chkDark, chkNotifiche, lblZoom, sliderZoom);
         boxImpostazioni.setPadding(new Insets(15));
 
-        // 4. MENU LATERALE (SIDEBAR)
+        // 5. MENU LATERALE (SIDEBAR)
         String stileMenu = "-fx-background-color: transparent; -fx-text-fill: #61dafb; -fx-cursor: hand; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-padding: 5;";
 
         Button btnP = new Button("📁 Progetti");
         Button btnProf = new Button("👤 Profilo");
+        Button btnRep = new Button("📊 Report");
         Button btnSet = new Button("⚙️ Impostazioni");
         Button btnEsc = new Button("🚪 Esci");
 
         btnP.setStyle(stileMenu);
         btnProf.setStyle(stileMenu);
+        btnRep.setStyle(stileMenu);
         btnSet.setStyle(stileMenu);
         btnEsc.setStyle(stileMenu);
 
         btnP.setOnAction(e -> root.setCenter(boxProgetti));
         btnProf.setOnAction(e -> root.setCenter(boxProfilo));
+        btnRep.setOnAction(e -> root.setCenter(boxReport));
         btnSet.setOnAction(e -> root.setCenter(boxImpostazioni));
         btnEsc.setOnAction(e -> {
             stage.close();
@@ -155,14 +178,14 @@ public class DashboardProgettiUI {
 
         Label lblMenu = new Label("MENU");
         lblMenu.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold;");
-        VBox sidebar = new VBox(12, lblMenu, new Separator(), btnP, btnProf, btnSet, new Separator(), btnEsc);
+        VBox sidebar = new VBox(12, lblMenu, new Separator(), btnP, btnProf, btnRep, btnSet, new Separator(), btnEsc);
         sidebar.setPadding(new Insets(15));
         sidebar.setStyle("-fx-background-color: #1a1a1a;");
 
         root.setLeft(sidebar);
         root.setCenter(boxProgetti);
 
-        stage.setScene(new Scene(root, 780, 450));
+        stage.setScene(new Scene(root, 800, 450));
         stage.show();
     }
 }
