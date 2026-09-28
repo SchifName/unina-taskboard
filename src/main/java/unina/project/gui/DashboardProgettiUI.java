@@ -2,198 +2,291 @@ package unina.project.gui;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DashboardProgettiUI {
-
     private final String emailUtente;
     private final String nomeUtente;
-    private final String ruoloUtente;
-    private final List<String> listaProgettiMemoria = new ArrayList<>(List.of("Progetto Esame OOP", "Sviluppo App Mobile"));
+    private final String ruoloUtente = "Studente";
+
+    private final List<String> progetti = new ArrayList<>(List.of("Progetto Esame OOP", "Sviluppo App Mobile"));
+    private final Map<String, List<String>> mappaAttivita = new HashMap<>();
 
     public DashboardProgettiUI(String emailUtente) {
         this.emailUtente = emailUtente;
         this.nomeUtente = emailUtente.contains("@") ? emailUtente.split("@")[0] : "Mario Rossi";
-        this.ruoloUtente = "Studente";
+
+        // Attività di esempio con i nomi dei responsabili inclusi
+        List<String> taskOOP = new ArrayList<>(List.of(
+                "Analisi Requisiti | Assegnato a: Mario Rossi | (Completata)",
+                "Implementazione GUI | Assegnato a: Anna Verdi | (In Corso)",
+                "Testing | Assegnato a: Luigi Bianchi | (Non Iniziata)"
+        ));
+
+        List<String> taskApp = new ArrayList<>(List.of(
+                "Setup Ambiente | Assegnato a: Mario Rossi | (Completata)",
+                "Design Login | Assegnato a: Giulia Neri | (Non Iniziata)"
+        ));
+
+        mappaAttivita.put("Progetto Esame OOP", taskOOP);
+        mappaAttivita.put("Sviluppo App Mobile", taskApp);
     }
 
     public void start(Stage stage) {
-        stage.setTitle("UninaTaskBoard - Dashboard (" + ruoloUtente + ")");
+        stage.setTitle("UninaTaskBoard - Dashboard");
         BorderPane root = new BorderPane();
 
         String stileCeleste = "-fx-text-fill: #61dafb;";
         String stileTitolo = "-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;";
 
-        // 1. PANNELLO PROGETTI
-        ListView<String> listViewProgetti = new ListView<>();
-        listViewProgetti.getItems().addAll(listaProgettiMemoria);
+        // 1. PANNELLO PROGETTI (HOME)
+        ListView<String> lista = new ListView<>();
+        lista.getItems().addAll(progetti);
 
-        Button btnNuovo = new Button("+ Nuovo Progetto");
-        Button btnModifica = new Button("✏️ Modifica");
-        Button btnElimina = new Button("🗑 Elimina");
+        Button btnApri = new Button("📂 Apri");
+        Button btnNuovo = new Button("+ Nuovo");
+        Button btnMod = new Button("✏️ Modifica");
+        Button btnDel = new Button("🗑 Elimina");
 
-        btnNuovo.setOnAction(e -> {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Nuovo Progetto");
-            dialog.setHeaderText("Crea un nuovo progetto collaborativo");
-            dialog.setContentText("Nome del progetto:");
-            dialog.showAndWait().ifPresent(nome -> {
-                if (!nome.trim().isEmpty()) {
-                    listaProgettiMemoria.add(nome.trim());
-                    listViewProgetti.getItems().add(nome.trim());
-                }
-            });
-        });
+        Runnable apriProgettoSelezionato = () -> {
+            String sel = lista.getSelectionModel().getSelectedItem();
+            if (sel != null) {
+                root.setCenter(creaVistaDettaglioProgetto(sel, root, lista));
+            } else {
+                new Alert(Alert.AlertType.WARNING, "Seleziona prima un progetto da aprire.", ButtonType.OK).showAndWait();
+            }
+        };
 
-        btnModifica.setOnAction(e -> {
-            String selezionato = listViewProgetti.getSelectionModel().getSelectedItem();
-            if (selezionato != null) {
-                TextInputDialog dialog = new TextInputDialog(selezionato);
-                dialog.setTitle("Modifica Progetto");
-                dialog.setContentText("Nuovo nome:");
-                dialog.showAndWait().ifPresent(nuovoNome -> {
-                    if (!nuovoNome.trim().isEmpty()) {
-                        int index = listViewProgetti.getSelectionModel().getSelectedIndex();
-                        listViewProgetti.getItems().set(index, nuovoNome.trim());
-                        listaProgettiMemoria.set(index, nuovoNome.trim());
+        btnApri.setOnAction(e -> apriProgettoSelezionato.run());
+        lista.setOnMouseClicked(e -> { if (e.getClickCount() == 2) apriProgettoSelezionato.run(); });
+
+        btnNuovo.setOnAction(e -> new TextInputDialog().showAndWait().ifPresent(s -> {
+            if (!s.isBlank()) {
+                progetti.add(s.trim());
+                lista.getItems().add(s.trim());
+                mappaAttivita.put(s.trim(), new ArrayList<>());
+            }
+        }));
+
+        btnMod.setOnAction(e -> {
+            String sel = lista.getSelectionModel().getSelectedItem();
+            if (sel != null) {
+                new TextInputDialog(sel).showAndWait().ifPresent(s -> {
+                    if (!s.isBlank()) {
+                        int idx = lista.getSelectionModel().getSelectedIndex();
+                        String vecchio = progetti.get(idx);
+                        progetti.set(idx, s.trim());
+                        lista.getItems().set(idx, s.trim());
+                        List<String> task = mappaAttivita.remove(vecchio);
+                        mappaAttivita.put(s.trim(), task != null ? task : new ArrayList<>());
                     }
                 });
-            } else {
-                new Alert(Alert.AlertType.WARNING, "Seleziona prima un progetto da modificare.", ButtonType.OK).showAndWait();
             }
         });
 
-        btnElimina.setOnAction(e -> {
-            String sel = listViewProgetti.getSelectionModel().getSelectedItem();
-            if (sel != null) {
-                listViewProgetti.getItems().remove(sel);
-                listaProgettiMemoria.remove(sel);
-            } else {
-                new Alert(Alert.AlertType.WARNING, "Seleziona prima un progetto da eliminare.", ButtonType.OK).showAndWait();
-            }
+        btnDel.setOnAction(e -> {
+            String sel = lista.getSelectionModel().getSelectedItem();
+            if (sel != null) { progetti.remove(sel); lista.getItems().remove(sel); mappaAttivita.remove(sel); }
         });
 
-        HBox boxBottoni = new HBox(10, btnNuovo, btnModifica, btnElimina);
-        Label lblTitoloProj = new Label("I Miei Progetti (Seleziona per gestire le attività):");
-        lblTitoloProj.setStyle(stileTitolo);
-        VBox boxProgetti = new VBox(10, lblTitoloProj, boxBottoni, listViewProgetti);
+        HBox bottoniProgetti = new HBox(10, btnApri, btnNuovo, btnMod, btnDel);
+        VBox boxProgetti = new VBox(10, new Label("I Miei Progetti (Doppio click per aprire)"), bottoniProgetti, lista);
         boxProgetti.setPadding(new Insets(15));
 
         // 2. PANNELLO PROFILO
-        Label lblProfTitolo = new Label("Informazioni Profilo Utente");
+        Label lblProfTitolo = new Label("Profilo Utente");
         lblProfTitolo.setStyle(stileTitolo);
-        Label lblNome = new Label("Nome account: " + nomeUtente);
+        Label lblNome = new Label("Nome: " + nomeUtente);
         Label lblRuolo = new Label("Ruolo: " + ruoloUtente);
         Label lblEmail = new Label("Email: " + emailUtente);
-
-        lblNome.setStyle(stileCeleste);
-        lblRuolo.setStyle(stileCeleste);
-        lblEmail.setStyle(stileCeleste);
+        for(Label l : new Label[]{lblNome, lblRuolo, lblEmail}) l.setStyle(stileCeleste);
 
         VBox boxProfilo = new VBox(10, lblProfTitolo, lblNome, lblRuolo, lblEmail);
         boxProfilo.setPadding(new Insets(15));
 
-        // 3. PANNELLO REPORT AVANZATO (Con tutte le metriche richieste dalla traccia)[cite: 1]
-        Label lblReportTitolo = new Label("Report e Statistiche Avanzate dei Progetti");
-        lblReportTitolo.setStyle(stileTitolo);
-
-        TextArea txtAreaReport = new TextArea();
-        txtAreaReport.setEditable(false);
-        txtAreaReport.setText(
-                "=== 📊 REPORT ANALITICO UNINATASKBOARD ===\n\n" +
-                        "📁 Progetto: Progetto Esame OOP\n" +
-                        " • Numero Totale Attività: 8\n" +
-                        " • Attività Completate: 3\n" +
-                        " • Attività in Corso: 3\n" +
-                        " • Attività Non Iniziate: 2\n" +
-                        " • Numero Attività di Sviluppo: 4\n" +
-                        " • Numero Medio Revisioni per File di Codice: 2.5\n" +
-                        " • Attività completate per ciascun membro:\n" +
-                        "    - Mario Rossi: 2 attività\n" +
-                        "    - Luigi Bianchi: 1 attività\n\n" +
-                        "--------------------------------------------------\n\n" +
-                        "📁 Progetto: Sviluppo App Mobile\n" +
-                        " • Numero Totale Attività: 5\n" +
-                        " • Attività Completate: 1\n" +
-                        " • Attività in Corso: 2\n" +
-                        " • Attività Non Iniziate: 2\n" +
-                        " • Numero Attività di Sviluppo: 3\n" +
-                        " • Numero Medio Revisioni per File di Codice: 1.8\n" +
-                        " • Attività completate per ciascun membro:\n" +
-                        "    - Mario Rossi: 1 attività"
-        );
-        txtAreaReport.setStyle("-fx-font-family: monospace;");
-        VBox boxReport = new VBox(10, lblReportTitolo, txtAreaReport);
-        boxReport.setPadding(new Insets(15));
+        // 3. PANNELLO REPORT GLOBALE
+        VBox boxReport = creaVistaReportGlobale();
 
         // 4. PANNELLO IMPOSTAZIONI
-        Label lblSetTitolo = new Label("Impostazioni di Sistema");
-        lblSetTitolo.setStyle(stileTitolo);
-
         CheckBox chkDark = new CheckBox("Modalità Oscura");
-        CheckBox chkNotifiche = new CheckBox("Notifiche Push Attive");
-        chkNotifiche.setSelected(true);
-
+        Slider sliderZoom = new Slider(10, 20, 12);
         chkDark.setStyle(stileCeleste);
-        chkNotifiche.setStyle(stileCeleste);
 
-        Label lblZoom = new Label("Barra di Ingrandimento (Zoom Testo):");
-        lblZoom.setStyle(stileCeleste);
-        Slider sliderZoom = new Slider(10, 24, 12);
-        sliderZoom.setShowTickLabels(true);
-        sliderZoom.setShowTickMarks(true);
-
-        Runnable aggiornaStile = () -> {
-            double fontSize = sliderZoom.getValue();
-            boolean isDark = chkDark.isSelected();
-            String bgColor = isDark ? "-fx-background-color: #2b2b2b;" : "-fx-background-color: #ffffff;";
-            root.setStyle(bgColor + " -fx-font-size: " + fontSize + "px;");
+        Runnable aggiornaTema = () -> {
+            boolean dark = chkDark.isSelected();
+            String bg = dark ? "-fx-background-color: #2b2b2b;" : "-fx-background-color: #ffffff;";
+            root.setStyle(bg + " -fx-font-size: " + sliderZoom.getValue() + "px;");
         };
+        chkDark.setOnAction(e -> aggiornaTema.run());
+        sliderZoom.valueProperty().addListener(e -> aggiornaTema.run());
 
-        chkDark.setOnAction(e -> aggiornaStile.run());
-        sliderZoom.valueProperty().addListener((observable, oldValue, newValue) -> aggiornaStile.run());
-
-        VBox boxImpostazioni = new VBox(10, lblSetTitolo, chkDark, chkNotifiche, lblZoom, sliderZoom);
+        VBox boxImpostazioni = new VBox(10, new Label("Impostazioni"), chkDark, new Label("Zoom Testo:"), sliderZoom);
         boxImpostazioni.setPadding(new Insets(15));
 
-        // 5. MENU LATERALE (SIDEBAR)
-        String stileMenu = "-fx-background-color: transparent; -fx-text-fill: #61dafb; -fx-cursor: hand; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-padding: 5;";
+        // 5. MENU LATERALE
+        String styleBtn = "-fx-background-color: transparent; -fx-text-fill: #61dafb; -fx-cursor: hand; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT;";
+        Button bP = new Button("📁 Progetti");
+        Button bProf = new Button("👤 Profilo");
+        Button bRep = new Button("📊 Report");
+        Button bSet = new Button("⚙️ Impostazioni");
+        Button bEsc = new Button("🚪 Esci");
+        for (Button b : new Button[]{bP, bProf, bRep, bSet, bEsc}) b.setStyle(styleBtn);
 
-        Button btnP = new Button("📁 Progetti");
-        Button btnProf = new Button("👤 Profilo");
-        Button btnRep = new Button("📊 Report");
-        Button btnSet = new Button("⚙️ Impostazioni");
-        Button btnEsc = new Button("🚪 Esci");
+        bP.setOnAction(e -> root.setCenter(boxProgetti));
+        bProf.setOnAction(e -> root.setCenter(boxProfilo));
+        bRep.setOnAction(e -> root.setCenter(creaVistaReportGlobale()));
+        bSet.setOnAction(e -> root.setCenter(boxImpostazioni));
+        bEsc.setOnAction(e -> { stage.close(); new LoginUI().start(new Stage()); });
 
-        btnP.setStyle(stileMenu);
-        btnProf.setStyle(stileMenu);
-        btnRep.setStyle(stileMenu);
-        btnSet.setStyle(stileMenu);
-        btnEsc.setStyle(stileMenu);
-
-        btnP.setOnAction(e -> root.setCenter(boxProgetti));
-        btnProf.setOnAction(e -> root.setCenter(boxProfilo));
-        btnRep.setOnAction(e -> root.setCenter(boxReport));
-        btnSet.setOnAction(e -> root.setCenter(boxImpostazioni));
-        btnEsc.setOnAction(e -> {
-            stage.close();
-            new LoginUI().start(new Stage());
-        });
-
-        Label lblMenu = new Label("MENU");
-        lblMenu.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold;");
-        VBox sidebar = new VBox(12, lblMenu, new Separator(), btnP, btnProf, btnRep, btnSet, new Separator(), btnEsc);
+        VBox sidebar = new VBox(12, new Label("MENU"), new Separator(), bP, bProf, bRep, bSet, new Separator(), bEsc);
         sidebar.setPadding(new Insets(15));
         sidebar.setStyle("-fx-background-color: #1a1a1a;");
 
         root.setLeft(sidebar);
         root.setCenter(boxProgetti);
 
-        stage.setScene(new Scene(root, 820, 480));
+        stage.setScene(new Scene(root, 900, 550));
         stage.show();
+    }
+
+    private VBox creaVistaDettaglioProgetto(String nomeProgetto, BorderPane root, ListView<String> listaProgettiHome) {
+        String stileTitolo = "-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;";
+        Label lblTitolo = new Label("Progetto: " + nomeProgetto);
+        lblTitolo.setStyle(stileTitolo);
+
+        Button btnIndietro = new Button("⬅ Torna ai Progetti");
+        btnIndietro.setOnAction(e -> root.setCenter(listaProgettiHome.getParent()));
+
+        List<String> attivitaDelProgetto = mappaAttivita.computeIfAbsent(nomeProgetto, k -> new ArrayList<>());
+        ListView<String> listaAttivitaUI = new ListView<>();
+        listaAttivitaUI.getItems().addAll(attivitaDelProgetto);
+
+        Button btnNuovaAttivita = new Button("+ Nuova Attività");
+        Button btnEliminaAttivita = new Button("🗑 Elimina");
+        Button btnStatisticheProgetto = new Button("📈 Grafico Statistiche Progetto");
+
+        btnNuovaAttivita.setOnAction(e -> {
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Nuova Attività");
+            dialog.setHeaderText("Inserisci i dati della task");
+
+            TextField txtTitolo = new TextField();
+            txtTitolo.setPromptText("Titolo Attività");
+            TextField txtAssegnatore = new TextField();
+            txtAssegnatore.setPromptText("Membro Responsabile (es. Mario Rossi)");
+
+            ComboBox<String> cmbStato = new ComboBox<>();
+            cmbStato.getItems().addAll("(Completata)", "(In Corso)", "(Non Iniziata)");
+            cmbStato.setValue("(In Corso)");
+
+            VBox content = new VBox(10, new Label("Titolo:"), txtTitolo, new Label("Assegnato a:"), txtAssegnatore, new Label("Stato:"), cmbStato);
+            dialog.getDialogPane().setContent(content);
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+            dialog.showAndWait().ifPresent(res -> {
+                if (res == ButtonType.OK && !txtTitolo.getText().isBlank() && !txtAssegnatore.getText().isBlank()) {
+                    String taskFormattata = txtTitolo.getText().trim() + " | Assegnato a: " + txtAssegnatore.getText().trim() + " " + cmbStato.getValue();
+                    attivitaDelProgetto.add(taskFormattata);
+                    listaAttivitaUI.getItems().add(taskFormattata);
+                }
+            });
+        });
+
+        btnEliminaAttivita.setOnAction(e -> {
+            String sel = listaAttivitaUI.getSelectionModel().getSelectedItem();
+            if (sel != null) { attivitaDelProgetto.remove(sel); listaAttivitaUI.getItems().remove(sel); }
+        });
+
+        btnStatisticheProgetto.setOnAction(e -> {
+            root.setCenter(creaVistaStatisticheProgetto(nomeProgetto, root, listaProgettiHome));
+        });
+
+        HBox bottoniTask = new HBox(10, btnNuovaAttivita, btnEliminaAttivita, btnStatisticheProgetto);
+        VBox boxDettaglio = new VBox(12, btnIndietro, lblTitolo, new Label("Elenco Attività:"), listaAttivitaUI, bottoniTask);
+        boxDettaglio.setPadding(new Insets(15));
+        return boxDettaglio;
+    }
+
+    /**
+     * Schermata dedicata alle statistiche del singolo progetto con GRAFICO A CERCHIO (PieChart) e i nomi
+     */
+    private ScrollPane creaVistaStatisticheProgetto(String nomeProgetto, BorderPane root, ListView<String> listaProgettiHome) {
+        Label lblTitolo = new Label("📊 Report e Grafico a Cerchio - " + nomeProgetto);
+        lblTitolo.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;");
+
+        Button btnTorna = new Button("⬅ Torna alle Attività");
+        btnTorna.setOnAction(e -> root.setCenter(creaVistaDettaglioProgetto(nomeProgetto, root, listaProgettiHome)));
+
+        List<String> attivita = mappaAttivita.getOrDefault(nomeProgetto, new ArrayList<>());
+
+        int c = 0, ic = 0, ni = 0;
+        StringBuilder completateNomi = new StringBuilder();
+        StringBuilder inCorsoNomi = new StringBuilder();
+        StringBuilder nonIniziateNomi = new StringBuilder();
+
+        for (String task : attivita) {
+            if (task.contains("(Completata)")) {
+                c++;
+                completateNomi.append("• ").append(task).append("\n");
+            } else if (task.contains("(In Corso)")) {
+                ic++;
+                inCorsoNomi.append("• ").append(task).append("\n");
+            } else if (task.contains("(Non Iniziata)")) {
+                ni++;
+                nonIniziateNomi.append("• ").append(task).append("\n");
+            }
+        }
+
+        // Configurazione del Grafico a Cerchio (PieChart)
+        PieChart pieChart = new PieChart();
+        pieChart.setTitle("Distribuzione Stati Attività");
+        if (c > 0) pieChart.getData().add(new PieChart.Data("Completate (" + c + ")", c));
+        if (ic > 0) pieChart.getData().add(new PieChart.Data("In Corso (" + ic + ")", ic));
+        if (ni > 0) pieChart.getData().add(new PieChart.Data("Non Iniziate (" + ni + ")", ni));
+        pieChart.setPrefSize(400, 250);
+
+        TextArea txtDettagli = new TextArea(
+                "✅ COMPLETATE (" + c + "):\n" + (completateNomi.length() > 0 ? completateNomi.toString() : "Nessuna\n") + "\n\n" +
+                        "⏳ IN CORSO (" + ic + "):\n" + (inCorsoNomi.length() > 0 ? inCorsoNomi.toString() : "Nessuna\n") + "\n\n" +
+                        "❌ NON INIZIATE (" + ni + "):\n" + (nonIniziateNomi.length() > 0 ? nonIniziateNomi.toString() : "Nessuna\n")
+        );
+        txtDettagli.setEditable(false);
+        txtDettagli.setPrefHeight(180);
+
+        VBox box = new VBox(15, btnTorna, lblTitolo, pieChart, new Label("Dettaglio Responsabili per Stato:"), txtDettagli);
+        box.setPadding(new Insets(15));
+
+        ScrollPane scrollPane = new ScrollPane(box);
+        scrollPane.setFitToWidth(true);
+        return scrollPane;
+    }
+
+    private VBox creaVistaReportGlobale() {
+        Label lbl = new Label("📊 Report Globale di Tutti i Progetti");
+        lbl.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;");
+
+        StringBuilder reportText = new StringBuilder();
+        for (Map.Entry<String, List<String>> entry : mappaAttivita.entrySet()) {
+            reportText.append("📁 Progetto: ").append(entry.getKey()).append("\n");
+            for (String t : entry.getValue()) {
+                reportText.append("   ").append(t).append("\n");
+            }
+            reportText.append("\n");
+        }
+
+        TextArea txtReport = new TextArea(reportText.toString());
+        txtReport.setEditable(false);
+        txtReport.setPrefHeight(350);
+
+        VBox box = new VBox(15, lbl, new Label("Elenco completo attività e relativi responsabili:"), txtReport);
+        box.setPadding(new Insets(15));
+        return box;
     }
 }

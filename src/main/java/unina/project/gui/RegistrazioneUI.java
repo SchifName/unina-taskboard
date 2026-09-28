@@ -8,16 +8,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class RegistrazioneUI extends Application {
-
     @Override
     public void start(Stage stage) {
         stage.setTitle("UninaTaskBoard - Registrazione");
-
-        VBox root = new VBox(12);
-        root.setPadding(new Insets(25));
-
-        Label titolo = new Label("Crea un Nuovo Account");
-        titolo.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
         TextField txtNome = new TextField();
         txtNome.setPromptText("Nome e Cognome");
@@ -28,46 +21,31 @@ public class RegistrazioneUI extends Application {
         PasswordField txtPassword = new PasswordField();
         txtPassword.setPromptText("Password");
 
-        // Scelta del ruolo separata nel form di registrazione
-        ChoiceBox<String> choiceRuolo = new ChoiceBox<>();
-        choiceRuolo.getItems().addAll("Studente", "Docente");
-        choiceRuolo.setValue("Studente");
+        ChoiceBox<String> boxRuolo = new ChoiceBox<>();
+        boxRuolo.getItems().addAll("Studente", "Docente");
+        boxRuolo.setValue("Studente");
 
         Button btnRegistra = new Button("Registrati");
-        Button btnTornaLogin = new Button("Torna al Login");
-        Label lblMessaggio = new Label();
+        Button btnTorna = new Button("Torna al Login");
+        Label lblMsg = new Label();
 
-        // Azione Registrazione
         btnRegistra.setOnAction(e -> {
-            String nome = txtNome.getText().trim();
-            String email = txtEmail.getText().trim();
-            String password = txtPassword.getText();
-            String ruolo = choiceRuolo.getValue();
-
-            if (nome.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                lblMessaggio.setStyle("-fx-text-fill: red;");
-                lblMessaggio.setText("Compila tutti i campi obbligatori.");
-                return;
+            if (txtNome.getText().isEmpty() || txtEmail.getText().isEmpty() || txtPassword.getText().isEmpty()) {
+                lblMsg.setText("Compila tutti i campi.");
+            } else {
+                lblMsg.setText("Registrazione completata!");
             }
-
-            // Registrazione completata con successo
-            lblMessaggio.setStyle("-fx-text-fill: green;");
-            lblMessaggio.setText("Registrazione completata come " + ruolo + "!");
         });
 
-        // Pulsante per tornare indietro al Login
-        btnTornaLogin.setOnAction(e -> {
-            stage.close(); // Chiude la registrazione
-            new LoginUI().start(new Stage()); // Riapre il login
+        btnTorna.setOnAction(e -> {
+            stage.close();
+            new LoginUI().start(new Stage());
         });
 
-        root.getChildren().addAll(
-                titolo, txtNome, txtEmail, txtPassword,
-                new Label("Seleziona Ruolo:"), choiceRuolo,
-                btnRegistra, btnTornaLogin, lblMessaggio
-        );
+        VBox root = new VBox(10, new Label("Registrazione"), txtNome, txtEmail, txtPassword, boxRuolo, btnRegistra, btnTorna, lblMsg);
+        root.setPadding(new Insets(20));
 
-        stage.setScene(new Scene(root, 340, 440));
+        stage.setScene(new Scene(root, 300, 360));
         stage.show();
     }
 }
