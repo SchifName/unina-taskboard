@@ -78,7 +78,7 @@ public class DashboardProgettiUI {
         });
 
         HBox boxBottoni = new HBox(10, btnNuovo, btnModifica, btnElimina);
-        Label lblTitoloProj = new Label("I Miei Progetti:");
+        Label lblTitoloProj = new Label("I Miei Progetti (Seleziona per gestire le attività):");
         lblTitoloProj.setStyle(stileTitolo);
         VBox boxProgetti = new VBox(10, lblTitoloProj, boxBottoni, listViewProgetti);
         boxProgetti.setPadding(new Insets(15));
@@ -97,26 +97,34 @@ public class DashboardProgettiUI {
         VBox boxProfilo = new VBox(10, lblProfTitolo, lblNome, lblRuolo, lblEmail);
         boxProfilo.setPadding(new Insets(15));
 
-        // 3. PANNELLO REPORT ATTIVITÀ (Nuova funzionalità richiesta dalla traccia)[cite: 1]
-        Label lblReportTitolo = new Label("Report e Statistiche Attività");
+        // 3. PANNELLO REPORT AVANZATO (Con tutte le metriche richieste dalla traccia)[cite: 1]
+        Label lblReportTitolo = new Label("Report e Statistiche Avanzate dei Progetti");
         lblReportTitolo.setStyle(stileTitolo);
 
         TextArea txtAreaReport = new TextArea();
         txtAreaReport.setEditable(false);
         txtAreaReport.setText(
-                "=== REPORT PROGETTI UNINATASKBOARD ===\n\n" +
+                "=== 📊 REPORT ANALITICO UNINATASKBOARD ===\n\n" +
                         "📁 Progetto: Progetto Esame OOP\n" +
-                        " - Totale Attività: 8\n" +
-                        " - Completate: 3\n" +
-                        " - In Corso: 3\n" +
-                        " - Non Iniziate: 2\n" +
-                        " - Attività di Sviluppo: 4\n\n" +
+                        " • Numero Totale Attività: 8\n" +
+                        " • Attività Completate: 3\n" +
+                        " • Attività in Corso: 3\n" +
+                        " • Attività Non Iniziate: 2\n" +
+                        " • Numero Attività di Sviluppo: 4\n" +
+                        " • Numero Medio Revisioni per File di Codice: 2.5\n" +
+                        " • Attività completate per ciascun membro:\n" +
+                        "    - Mario Rossi: 2 attività\n" +
+                        "    - Luigi Bianchi: 1 attività\n\n" +
+                        "--------------------------------------------------\n\n" +
                         "📁 Progetto: Sviluppo App Mobile\n" +
-                        " - Totale Attività: 5\n" +
-                        " - Completate: 1\n" +
-                        " - In Corso: 2\n" +
-                        " - Non Iniziate: 2\n" +
-                        " - Attività di Sviluppo: 3"
+                        " • Numero Totale Attività: 5\n" +
+                        " • Attività Completate: 1\n" +
+                        " • Attività in Corso: 2\n" +
+                        " • Attività Non Iniziate: 2\n" +
+                        " • Numero Attività di Sviluppo: 3\n" +
+                        " • Numero Medio Revisioni per File di Codice: 1.8\n" +
+                        " • Attività completate per ciascun membro:\n" +
+                        "    - Mario Rossi: 1 attività"
         );
         txtAreaReport.setStyle("-fx-font-family: monospace;");
         VBox boxReport = new VBox(10, lblReportTitolo, txtAreaReport);
@@ -185,7 +193,7 @@ public class DashboardProgettiUI {
         root.setLeft(sidebar);
         root.setCenter(boxProgetti);
 
-        stage.setScene(new Scene(root, 800, 450));
+        stage.setScene(new Scene(root, 820, 480));
         stage.show();
     }
 }
