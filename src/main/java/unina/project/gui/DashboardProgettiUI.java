@@ -6,49 +6,33 @@ import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import unina.project.controller.ProgettoController;
+import unina.project.entity.Utente;
+import unina.project.entity.Progetto;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class DashboardProgettiUI {
-    private final String emailUtente;
-    private final String nomeUtente;
-    private final String ruoloUtente = "Studente";
-
-    private final List<String> progetti = new ArrayList<>(List.of("Progetto Esame OOP", "Sviluppo App Mobile"));
+    private final Utente utenteCorrente;
+    private final ProgettoController progettoController = new ProgettoController();
     private final Map<String, List<String>> mappaAttivita = new HashMap<>();
 
-    public DashboardProgettiUI(String emailUtente) {
-        this.emailUtente = emailUtente;
-        this.nomeUtente = emailUtente.contains("@") ? emailUtente.split("@")[0] : "Mario Rossi";
-
-        // Attività di esempio con i nomi dei responsabili inclusi
-        List<String> taskOOP = new ArrayList<>(List.of(
-                "Analisi Requisiti | Assegnato a: Mario Rossi | (Completata)",
-                "Implementazione GUI | Assegnato a: Anna Verdi | (In Corso)",
-                "Testing | Assegnato a: Luigi Bianchi | (Non Iniziata)"
-        ));
-
-        List<String> taskApp = new ArrayList<>(List.of(
-                "Setup Ambiente | Assegnato a: Mario Rossi | (Completata)",
-                "Design Login | Assegnato a: Giulia Neri | (Non Iniziata)"
-        ));
-
-        mappaAttivita.put("Progetto Esame OOP", taskOOP);
-        mappaAttivita.put("Sviluppo App Mobile", taskApp);
+    public DashboardProgettiUI(Utente utente){
+        this.utenteCorrente = utente;
     }
 
     public void start(Stage stage) {
         stage.setTitle("UninaTaskBoard - Dashboard");
         BorderPane root = new BorderPane();
 
+        ListView<Progetto> listaProgetti = new ListView<>();
+        List<Progetto> progettiDalDB = progettoController.getProgettiUtente(utenteCorrente.getIdUtente());
+        listaProgetti.getItems().addAll(progettiDalDB);
+
         String stileCeleste = "-fx-text-fill: #61dafb;";
         String stileTitolo = "-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;";
-
-        // 1. PANNELLO PROGETTI (HOME)
-        ListView<String> lista = new ListView<>();
-        lista.getItems().addAll(progetti);
 
         Button btnApri = new Button("📂 Apri");
         Button btnNuovo = new Button("+ Nuovo");
@@ -56,56 +40,43 @@ public class DashboardProgettiUI {
         Button btnDel = new Button("🗑 Elimina");
 
         Runnable apriProgettoSelezionato = () -> {
-            String sel = lista.getSelectionModel().getSelectedItem();
+            Progetto sel = listaProgetti.getSelectionModel().getSelectedItem();
             if (sel != null) {
-                root.setCenter(creaVistaDettaglioProgetto(sel, root, lista));
+                root.setCenter(creaVistaDettaglioProgetto(sel.getNome(), root, listaProgetti));
             } else {
                 new Alert(Alert.AlertType.WARNING, "Seleziona prima un progetto da aprire.", ButtonType.OK).showAndWait();
             }
         };
 
         btnApri.setOnAction(e -> apriProgettoSelezionato.run());
-        lista.setOnMouseClicked(e -> { if (e.getClickCount() == 2) apriProgettoSelezionato.run(); });
+        listaProgetti.setOnMouseClicked(e -> { if (e.getClickCount() == 2) apriProgettoSelezionato.run(); });
 
         btnNuovo.setOnAction(e -> new TextInputDialog().showAndWait().ifPresent(s -> {
             if (!s.isBlank()) {
-                progetti.add(s.trim());
-                lista.getItems().add(s.trim());
+                Progetto nuovoP = new Progetto(0, s.trim(), "", utenteCorrente.getIdUtente());
+                listaProgetti.getItems().add(nuovoP);
                 mappaAttivita.put(s.trim(), new ArrayList<>());
             }
         }));
 
-        btnMod.setOnAction(e -> {
-            String sel = lista.getSelectionModel().getSelectedItem();
+        btnDel.setOnAction(e -> {
+            Progetto sel = listaProgetti.getSelectionModel().getSelectedItem();
             if (sel != null) {
-                new TextInputDialog(sel).showAndWait().ifPresent(s -> {
-                    if (!s.isBlank()) {
-                        int idx = lista.getSelectionModel().getSelectedIndex();
-                        String vecchio = progetti.get(idx);
-                        progetti.set(idx, s.trim());
-                        lista.getItems().set(idx, s.trim());
-                        List<String> task = mappaAttivita.remove(vecchio);
-                        mappaAttivita.put(s.trim(), task != null ? task : new ArrayList<>());
-                    }
-                });
+                listaProgetti.getItems().remove(sel);
+                mappaAttivita.remove(sel.getNome());
             }
         });
 
-        btnDel.setOnAction(e -> {
-            String sel = lista.getSelectionModel().getSelectedItem();
-            if (sel != null) { progetti.remove(sel); lista.getItems().remove(sel); mappaAttivita.remove(sel); }
-        });
-
         HBox bottoniProgetti = new HBox(10, btnApri, btnNuovo, btnMod, btnDel);
-        VBox boxProgetti = new VBox(10, new Label("I Miei Progetti (Doppio click per aprire)"), bottoniProgetti, lista);
+        VBox boxProgetti = new VBox(10, new Label("I Miei Progetti (Doppio click per aprire)"), bottoniProgetti, listaProgetti);
         boxProgetti.setPadding(new Insets(15));
 
         // 2. PANNELLO PROFILO
         Label lblProfTitolo = new Label("Profilo Utente");
         lblProfTitolo.setStyle(stileTitolo);
-        Label lblNome = new Label("Nome: " + nomeUtente);
-        Label lblRuolo = new Label("Ruolo: " + ruoloUtente);
-        Label lblEmail = new Label("Email: " + emailUtente);
+        Label lblNome = new Label("Nome: " + utenteCorrente.getNomeCompleto());
+        Label lblRuolo = new Label("Ruolo: " + "");
+        Label lblEmail = new Label("Email: " + utenteCorrente.getEmail());
         for(Label l : new Label[]{lblNome, lblRuolo, lblEmail}) l.setStyle(stileCeleste);
 
         VBox boxProfilo = new VBox(10, lblProfTitolo, lblNome, lblRuolo, lblEmail);
@@ -156,7 +127,7 @@ public class DashboardProgettiUI {
         stage.show();
     }
 
-    private VBox creaVistaDettaglioProgetto(String nomeProgetto, BorderPane root, ListView<String> listaProgettiHome) {
+    private VBox creaVistaDettaglioProgetto(String nomeProgetto, BorderPane root, ListView<Progetto> listaProgettiHome) {
         String stileTitolo = "-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;";
         Label lblTitolo = new Label("Progetto: " + nomeProgetto);
         lblTitolo.setStyle(stileTitolo);
@@ -217,7 +188,7 @@ public class DashboardProgettiUI {
     /**
      * Schermata dedicata alle statistiche del singolo progetto con GRAFICO A CERCHIO (PieChart) e i nomi
      */
-    private ScrollPane creaVistaStatisticheProgetto(String nomeProgetto, BorderPane root, ListView<String> listaProgettiHome) {
+    private ScrollPane creaVistaStatisticheProgetto(String nomeProgetto, BorderPane root, ListView<Progetto> listaProgettiHome) {
         Label lblTitolo = new Label("📊 Report e Grafico a Cerchio - " + nomeProgetto);
         lblTitolo.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;");
 

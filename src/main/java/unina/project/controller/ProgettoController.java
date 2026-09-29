@@ -23,7 +23,7 @@ public class ProgettoController {
         Connection conn = ConnessioneDatabase.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
 
-            stmt.setInt(1, idUtente); // Inserisce l'ID di Mario Rossi
+            stmt.setInt(1, idUtente);// questo serve a dare un valore al ? nella query
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {

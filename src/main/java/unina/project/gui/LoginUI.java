@@ -37,7 +37,7 @@ public class LoginUI extends Application {
                 Utente utenteLoggato = autenticazione.effettuaLogin(email, password);
                 if (utenteLoggato != null) {
                     stage.close();
-                    new DashboardProgettiUI(utenteLoggato.getNomeCompleto()).start(new Stage());
+                    new DashboardProgettiUI(utenteLoggato).start(new Stage());
                 }else{
                     lblMsg.setText("Dati errati");
                 }
