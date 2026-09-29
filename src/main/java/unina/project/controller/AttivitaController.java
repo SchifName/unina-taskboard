@@ -37,4 +37,22 @@ public class AttivitaController {
         }
         return listaAttivita;
     }
+    public boolean inserisciAttivita(int idProgetto, String titolo, String stato, int idCreatore) {
+        String query = "INSERT INTO Attivita (id_prog, titolo, stato, id_creatore) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = ConnessioneDatabase.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, idProgetto);
+            stmt.setString(2, titolo);
+            stmt.setString(3, stato);
+            stmt.setInt(4, idCreatore);
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Errore inserimento attività: " + e.getMessage());
+            return false;
+        }
+    }
 }

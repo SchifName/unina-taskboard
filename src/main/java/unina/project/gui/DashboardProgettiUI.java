@@ -144,6 +144,48 @@ public class DashboardProgettiUI {
         Button btnCaricaFile = new Button("📤 Carica File");
         Button btnScaricaFile = new Button("📥 Scarica Ultimo File");
 
+        btnNuovaAttivita.setOnAction(e -> {
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Nuova Attività");
+            dialog.setHeaderText("Inserisci i dati della task");
+
+            TextField txtTitolo = new TextField();
+            txtTitolo.setPromptText("Titolo Attività");
+
+            ComboBox<String> cmbStato = new ComboBox<>();
+            cmbStato.getItems().addAll("(Completata)", "(In Corso)", "(Non Iniziata)");
+            cmbStato.setValue("(Non Iniziata)");
+
+            VBox content = new VBox(10, new Label("Titolo:"), txtTitolo, new Label("Stato:"), cmbStato);
+            dialog.getDialogPane().setContent(content);
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+            dialog.showAndWait().ifPresent(res -> {
+                if (res == ButtonType.OK && !txtTitolo.getText().isBlank()) {
+                    // Mappiamo i testi della tendina con gli stati reali del database
+                    String statoDB = "Nuova";
+                    if (cmbStato.getValue().equals("(Completata)")) statoDB = "Finita";
+                    else if (cmbStato.getValue().equals("(In Corso)")) statoDB = "Presa_in_carico";
+
+                    // Salvataggio reale in PostgreSQL!
+                    boolean successo = attivitaController.inserisciAttivita(
+                            progettoSelezionato.getIdProgetto(),
+                            txtTitolo.getText().trim(),
+                            statoDB,
+                            utenteCorrente.getIdUtente()
+                    );
+
+                    if (successo) {
+                        // Ricarichiamo la lista dal DB per far comparire la nuova task
+                        listaAttivitaUI.getItems().clear();
+                        listaAttivitaUI.getItems().addAll(attivitaController.getAttivitaByProgetto(progettoSelezionato.getIdProgetto()));
+                    } else {
+                        new Alert(Alert.AlertType.ERROR, "Errore nel salvataggio su database.", ButtonType.OK).showAndWait();
+                    }
+                }
+            });
+        });
+
         btnScaricaFile.setOnAction(e -> {
             Attivita taskSelezionata = listaAttivitaUI.getSelectionModel().getSelectedItem();
 
