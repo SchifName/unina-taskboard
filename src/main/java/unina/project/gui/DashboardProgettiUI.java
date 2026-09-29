@@ -141,8 +141,39 @@ public class DashboardProgettiUI {
         listaAttivitaUI.getItems().addAll(attivitaDalDB);
 
         Button btnNuovaAttivita = new Button("+ Nuova Attività");
-        Button btnEliminaAttivita = new Button("🗑 Elimina");
         Button btnCaricaFile = new Button("📤 Carica File");
+        Button btnScaricaFile = new Button("📥 Scarica Ultimo File");
+
+        btnScaricaFile.setOnAction(e -> {
+            Attivita taskSelezionata = listaAttivitaUI.getSelectionModel().getSelectedItem();
+
+            if (taskSelezionata == null) {
+                new Alert(Alert.AlertType.WARNING, "Seleziona un'attività per scaricare il suo file.", ButtonType.OK).showAndWait();
+                return;
+            }
+
+            FileController fc = new FileController();
+
+            // 1. Chiediamo al DB come si chiamava il file originale!
+            String nomeOriginale = fc.getNomeFileOriginale(taskSelezionata.getIdAttivita());
+
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("Salva il file scaricato");
+            // 2. Impostiamo il VERO nome come suggerimento di salvataggio
+            fileChooser.setInitialFileName(nomeOriginale);
+
+            File destinazione = fileChooser.showSaveDialog(root.getScene().getWindow());
+
+            if (destinazione != null) {
+                boolean successo = fc.scaricaUltimaRevisione(taskSelezionata.getIdAttivita(), destinazione);
+
+                if (successo) {
+                    new Alert(Alert.AlertType.INFORMATION, "File scaricato con successo in:\n" + destinazione.getAbsolutePath(), ButtonType.OK).showAndWait();
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "Errore: impossibile scaricare il file.", ButtonType.OK).showAndWait();
+                }
+            }
+        });
 
         btnCaricaFile.setOnAction(e -> {
             // Capiamo quale attività è stata selezionata nella lista
@@ -188,18 +219,11 @@ public class DashboardProgettiUI {
             root.setCenter(creaVistaStatisticheProgetto(progettoSelezionato, root, listaProgettiHome));
         });
 
-        btnEliminaAttivita.setOnAction(e -> {
-            Attivita sel = listaAttivitaUI.getSelectionModel().getSelectedItem();
-            if (sel != null) {
-                listaAttivitaUI.getItems().remove(sel);
-            }
-        });
-
         btnStatisticheProgetto.setOnAction(e -> {
             root.setCenter(creaVistaStatisticheProgetto(progettoSelezionato, root, listaProgettiHome));
         });
 
-        HBox bottoniTask = new HBox(10, btnNuovaAttivita, btnEliminaAttivita, btnCaricaFile, btnStatisticheProgetto);
+        HBox bottoniTask = new HBox(10, btnNuovaAttivita, btnScaricaFile, btnCaricaFile, btnStatisticheProgetto);
         VBox boxDettaglio = new VBox(12, btnIndietro, lblTitolo, new Label("Elenco Attività:"), listaAttivitaUI, bottoniTask);
         boxDettaglio.setPadding(new Insets(15));
         return boxDettaglio;

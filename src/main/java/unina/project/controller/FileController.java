@@ -71,4 +71,53 @@ public class FileController {
             try { if (connessione != null) connessione.setAutoCommit(true); } catch (SQLException ex) {}
         }
     }
+
+    public boolean scaricaUltimaRevisione(int idTask, File fileDestinazione) {
+        // Cerchiamo il file collegato alla task e prendiamo l'ultima revisione (ordinando in modo decrescente)
+        String query = "SELECT r.contenuto " +
+                "FROM File_task f " +
+                "JOIN Revisione_file r ON f.id_file = r.id_file_rev " +
+                "WHERE f.id_task = ? " +
+                "ORDER BY r.versione DESC LIMIT 1";
+
+        Connection connessione = ConnessioneDatabase.getConnection();
+
+        try (PreparedStatement stmt = connessione.prepareStatement(query)) {
+            stmt.setInt(1, idTask);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    // Estraiamo l'array di byte da PostgreSQL
+                    byte[] fileInByte = rs.getBytes("contenuto");
+
+                    // Scriviamo i byte nel percorso scelto dall'utente sul suo PC
+                    Files.write(fileDestinazione.toPath(), fileInByte);
+                    return true;
+                }
+            }
+        } catch (SQLException | IOException e) {
+            System.err.println("Errore durante il download del file: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public String getNomeFileOriginale(int idTask) {
+        String query = "SELECT nome_file, estensione FROM File_task WHERE id_task = ?";
+        Connection conn = ConnessioneDatabase.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, idTask);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String nome = rs.getString("nome_file");
+                    String ext = rs.getString("estensione");
+                    // Ricostruisce il nome originale (es. "documento.txt")
+                    return ext.isEmpty() ? nome : nome + "." + ext;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Errore lettura nome file: " + e.getMessage());
+        }
+        return "Download_Task_" + idTask; // Nome di emergenza
+    }
+
 }
