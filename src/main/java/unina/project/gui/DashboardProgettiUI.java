@@ -6,7 +6,9 @@ import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import unina.project.controller.AttivitaController;
 import unina.project.controller.ProgettoController;
+import unina.project.entity.Attivita;
 import unina.project.entity.Utente;
 import unina.project.entity.Progetto;
 import java.util.ArrayList;
@@ -17,7 +19,7 @@ import java.util.Map;
 public class DashboardProgettiUI {
     private final Utente utenteCorrente;
     private final ProgettoController progettoController = new ProgettoController();
-    private final Map<String, List<String>> mappaAttivita = new HashMap<>();
+    private final AttivitaController attivitaController = new AttivitaController();
 
     public DashboardProgettiUI(Utente utente){
         this.utenteCorrente = utente;
@@ -42,7 +44,7 @@ public class DashboardProgettiUI {
         Runnable apriProgettoSelezionato = () -> {
             Progetto sel = listaProgetti.getSelectionModel().getSelectedItem();
             if (sel != null) {
-                root.setCenter(creaVistaDettaglioProgetto(sel.getNome(), root, listaProgetti));
+                root.setCenter(creaVistaDettaglioProgetto(sel, root, listaProgetti));
             } else {
                 new Alert(Alert.AlertType.WARNING, "Seleziona prima un progetto da aprire.", ButtonType.OK).showAndWait();
             }
@@ -127,56 +129,35 @@ public class DashboardProgettiUI {
         stage.show();
     }
 
-    private VBox creaVistaDettaglioProgetto(String nomeProgetto, BorderPane root, ListView<Progetto> listaProgettiHome) {
+    private VBox creaVistaDettaglioProgetto(Progetto progettoSelezionato, BorderPane root, ListView<Progetto> listaProgettiHome) {
         String stileTitolo = "-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;";
-        Label lblTitolo = new Label("Progetto: " + nomeProgetto);
+        Label lblTitolo = new Label("Progetto: " + progettoSelezionato.getNome());
         lblTitolo.setStyle(stileTitolo);
 
         Button btnIndietro = new Button("⬅ Torna ai Progetti");
         btnIndietro.setOnAction(e -> root.setCenter(listaProgettiHome.getParent()));
 
-        List<String> attivitaDelProgetto = mappaAttivita.computeIfAbsent(nomeProgetto, k -> new ArrayList<>());
-        ListView<String> listaAttivitaUI = new ListView<>();
-        listaAttivitaUI.getItems().addAll(attivitaDelProgetto);
+        ListView<Attivita> listaAttivitaUI = new ListView<>();
+        List<Attivita> attivitaDalDB = attivitaController.getAttivitaByProgetto(progettoSelezionato.getIdProgetto());
+        listaAttivitaUI.getItems().addAll(attivitaDalDB);
 
         Button btnNuovaAttivita = new Button("+ Nuova Attività");
         Button btnEliminaAttivita = new Button("🗑 Elimina");
         Button btnStatisticheProgetto = new Button("📈 Grafico Statistiche Progetto");
 
-        btnNuovaAttivita.setOnAction(e -> {
-            Dialog<ButtonType> dialog = new Dialog<>();
-            dialog.setTitle("Nuova Attività");
-            dialog.setHeaderText("Inserisci i dati della task");
-
-            TextField txtTitolo = new TextField();
-            txtTitolo.setPromptText("Titolo Attività");
-            TextField txtAssegnatore = new TextField();
-            txtAssegnatore.setPromptText("Membro Responsabile (es. Mario Rossi)");
-
-            ComboBox<String> cmbStato = new ComboBox<>();
-            cmbStato.getItems().addAll("(Completata)", "(In Corso)", "(Non Iniziata)");
-            cmbStato.setValue("(In Corso)");
-
-            VBox content = new VBox(10, new Label("Titolo:"), txtTitolo, new Label("Assegnato a:"), txtAssegnatore, new Label("Stato:"), cmbStato);
-            dialog.getDialogPane().setContent(content);
-            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-            dialog.showAndWait().ifPresent(res -> {
-                if (res == ButtonType.OK && !txtTitolo.getText().isBlank() && !txtAssegnatore.getText().isBlank()) {
-                    String taskFormattata = txtTitolo.getText().trim() + " | Assegnato a: " + txtAssegnatore.getText().trim() + " " + cmbStato.getValue();
-                    attivitaDelProgetto.add(taskFormattata);
-                    listaAttivitaUI.getItems().add(taskFormattata);
-                }
-            });
+        btnStatisticheProgetto.setOnAction(e -> {
+            root.setCenter(creaVistaStatisticheProgetto(progettoSelezionato, root, listaProgettiHome));
         });
 
         btnEliminaAttivita.setOnAction(e -> {
-            String sel = listaAttivitaUI.getSelectionModel().getSelectedItem();
-            if (sel != null) { attivitaDelProgetto.remove(sel); listaAttivitaUI.getItems().remove(sel); }
+            Attivita sel = listaAttivitaUI.getSelectionModel().getSelectedItem();
+            if (sel != null) {
+                listaAttivitaUI.getItems().remove(sel);
+            }
         });
 
         btnStatisticheProgetto.setOnAction(e -> {
-            root.setCenter(creaVistaStatisticheProgetto(nomeProgetto, root, listaProgettiHome));
+            root.setCenter(creaVistaStatisticheProgetto(progettoSelezionato, root, listaProgettiHome));
         });
 
         HBox bottoniTask = new HBox(10, btnNuovaAttivita, btnEliminaAttivita, btnStatisticheProgetto);
@@ -188,28 +169,28 @@ public class DashboardProgettiUI {
     /**
      * Schermata dedicata alle statistiche del singolo progetto con GRAFICO A CERCHIO (PieChart) e i nomi
      */
-    private ScrollPane creaVistaStatisticheProgetto(String nomeProgetto, BorderPane root, ListView<Progetto> listaProgettiHome) {
-        Label lblTitolo = new Label("📊 Report e Grafico a Cerchio - " + nomeProgetto);
+    private ScrollPane creaVistaStatisticheProgetto(Progetto progettoSelezionato, BorderPane root, ListView<Progetto> listaProgettiHome) {
+        Label lblTitolo = new Label("📊 Report e Grafico a Cerchio - " + progettoSelezionato.getNome());
         lblTitolo.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;");
 
         Button btnTorna = new Button("⬅ Torna alle Attività");
-        btnTorna.setOnAction(e -> root.setCenter(creaVistaDettaglioProgetto(nomeProgetto, root, listaProgettiHome)));
+        btnTorna.setOnAction(e -> root.setCenter(creaVistaDettaglioProgetto(progettoSelezionato, root, listaProgettiHome)));
 
-        List<String> attivita = mappaAttivita.getOrDefault(nomeProgetto, new ArrayList<>());
+        List<Attivita> attivita = attivitaController.getAttivitaByProgetto(progettoSelezionato.getIdProgetto());
 
         int c = 0, ic = 0, ni = 0;
         StringBuilder completateNomi = new StringBuilder();
         StringBuilder inCorsoNomi = new StringBuilder();
         StringBuilder nonIniziateNomi = new StringBuilder();
 
-        for (String task : attivita) {
-            if (task.contains("(Completata)")) {
+        for (Attivita task : attivita) {
+            if ("Finita".equals(task.getStato())) {
                 c++;
                 completateNomi.append("• ").append(task).append("\n");
-            } else if (task.contains("(In Corso)")) {
+            } else if ("Presa_in_carico".equals(task.getStato())) {
                 ic++;
                 inCorsoNomi.append("• ").append(task).append("\n");
-            } else if (task.contains("(Non Iniziata)")) {
+            } else {
                 ni++;
                 nonIniziateNomi.append("• ").append(task).append("\n");
             }
@@ -226,12 +207,12 @@ public class DashboardProgettiUI {
         TextArea txtDettagli = new TextArea(
                 "✅ COMPLETATE (" + c + "):\n" + (completateNomi.length() > 0 ? completateNomi.toString() : "Nessuna\n") + "\n\n" +
                         "⏳ IN CORSO (" + ic + "):\n" + (inCorsoNomi.length() > 0 ? inCorsoNomi.toString() : "Nessuna\n") + "\n\n" +
-                        "❌ NON INIZIATE (" + ni + "):\n" + (nonIniziateNomi.length() > 0 ? nonIniziateNomi.toString() : "Nessuna\n")
+                        "❌ NUOVE (" + ni + "):\n" + (nonIniziateNomi.length() > 0 ? nonIniziateNomi.toString() : "Nessuna\n")
         );
         txtDettagli.setEditable(false);
         txtDettagli.setPrefHeight(180);
 
-        VBox box = new VBox(15, btnTorna, lblTitolo, pieChart, new Label("Dettaglio Responsabili per Stato:"), txtDettagli);
+        VBox box = new VBox(15, btnTorna, lblTitolo, pieChart, new Label("Dettaglio Attivita per Stato:"), txtDettagli);
         box.setPadding(new Insets(15));
 
         ScrollPane scrollPane = new ScrollPane(box);
@@ -242,12 +223,18 @@ public class DashboardProgettiUI {
     private VBox creaVistaReportGlobale() {
         Label lbl = new Label("📊 Report Globale di Tutti i Progetti");
         lbl.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;");
-
         StringBuilder reportText = new StringBuilder();
-        for (Map.Entry<String, List<String>> entry : mappaAttivita.entrySet()) {
-            reportText.append("📁 Progetto: ").append(entry.getKey()).append("\n");
-            for (String t : entry.getValue()) {
-                reportText.append("   ").append(t).append("\n");
+        List<Progetto> progettiUtente = progettoController.getProgettiUtente(utenteCorrente.getIdUtente());
+        for (Progetto p : progettiUtente) {
+            reportText.append("📁 Progetto: ").append(p.getNome()).append("\n");
+            List<Attivita> taskDelProgetto = attivitaController.getAttivitaByProgetto(p.getIdProgetto());
+            if (taskDelProgetto.isEmpty()) {
+                reportText.append("   (Nessuna attività presente)\n");
+            } else {
+                for (Attivita a : taskDelProgetto) {
+                    reportText.append("   - ").append(a.getTitolo())
+                            .append(" [").append(a.getStato()).append("]\n");
+                }
             }
             reportText.append("\n");
         }

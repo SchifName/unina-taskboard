@@ -42,4 +42,9 @@ public class Attivita {
     public void setTipo(String tipo) { this.tipo = tipo; }
     public void setStato(String stato) { this.stato = stato; }
     public void setIdCreatore(int idCreatore) { this.idCreatore = idCreatore; }
+
+    @Override
+    public String toString() {
+        return titolo + " | Scadenza: " + (scadenza != null ? scadenza : "N/D") + " | Stato: " + stato;
+    }
 }
