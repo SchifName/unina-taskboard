@@ -143,6 +143,39 @@ public class DashboardProgettiUI {
         Button btnNuovaAttivita = new Button("+ Nuova Attività");
         Button btnCaricaFile = new Button("📤 Carica File");
         Button btnScaricaFile = new Button("📥 Scarica Ultimo File");
+        Button btnStorico = new Button(" Storico File");
+
+        btnStorico.setOnAction(e -> {
+            Attivita taskSelezionata = listaAttivitaUI.getSelectionModel().getSelectedItem();
+
+            if (taskSelezionata == null) {
+                new Alert(Alert.AlertType.WARNING, "Seleziona un'attività per vederne lo storico.", ButtonType.OK).showAndWait();
+                return;
+            }
+
+            FileController fc = new FileController();
+            List<String> storico = fc.getStoricoRevisioni(taskSelezionata.getIdAttivita());
+
+            if (storico.isEmpty()) {
+                new Alert(Alert.AlertType.INFORMATION, "Nessun file o revisione presente per questa attività.", ButtonType.OK).showAndWait();
+                return;
+            }
+
+            // Creiamo un popup pulito per mostrare la lista delle versioni
+            Dialog<Void> dialogStorico = new Dialog<>();
+            dialogStorico.setTitle("Cronologia Revisioni");
+            dialogStorico.setHeaderText("Storico file di: " + taskSelezionata.getTitolo());
+
+            ListView<String> listaStoricoUI = new ListView<>();
+            listaStoricoUI.getItems().addAll(storico);
+            listaStoricoUI.setPrefSize(450, 300);
+
+            dialogStorico.getDialogPane().setContent(listaStoricoUI);
+            dialogStorico.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+
+            dialogStorico.showAndWait();
+        });
+
 
         btnNuovaAttivita.setOnAction(e -> {
             Dialog<ButtonType> dialog = new Dialog<>();
