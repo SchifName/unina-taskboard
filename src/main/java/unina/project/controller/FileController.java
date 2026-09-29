@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.ArrayList;
 
 public class FileController {
 
@@ -118,6 +120,47 @@ public class FileController {
             System.err.println("Errore lettura nome file: " + e.getMessage());
         }
         return "Download_Task_" + idTask; // Nome di emergenza
+    }
+
+    public List<String> getStoricoRevisioni(int idTask) {
+        List<String> storico = new ArrayList<>();
+
+        // Mettiamo in JOIN file, revisioni e utente per avere nome e cognome dell'autore
+        String query = "SELECT r.versione, r.nota_descrittiva, r.data_modifica, u.nome, u.cognome " +
+                "FROM File_task f " +
+                "JOIN Revisione_file r ON f.id_file = r.id_file_rev " +
+                "JOIN Utente u ON r.id_autore = u.id_utente " +
+                "WHERE f.id_task = ? " +
+                "ORDER BY r.versione DESC";
+
+        Connection conn = ConnessioneDatabase.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, idTask);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int versione = rs.getInt("versione");
+                    String nota = rs.getString("nota_descrittiva");
+                    String dataStr = rs.getString("data_modifica"); // Lo prendiamo come stringa per semplicità
+                    String autore = rs.getString("nome") + " " + rs.getString("cognome");
+
+                    // Tronchiamo un po' la data se è troppo lunga (es. togliamo i millisecondi)
+                    if (dataStr != null && dataStr.contains(".")) {
+                        dataStr = dataStr.substring(0, dataStr.lastIndexOf('.'));
+                    }
+
+                    // Assembliamo la riga per l'interfaccia grafica
+                    String riga = "Versione " + versione + " " + dataStr + "\n" +
+                            "Autore: " + autore + "\n" +
+                            "Nota: " + nota;
+
+                    storico.add(riga);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Errore caricamento storico: " + e.getMessage());
+        }
+        return storico;
     }
 
 }

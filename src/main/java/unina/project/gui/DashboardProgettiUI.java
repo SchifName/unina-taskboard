@@ -147,36 +147,53 @@ public class DashboardProgettiUI {
         btnNuovaAttivita.setOnAction(e -> {
             Dialog<ButtonType> dialog = new Dialog<>();
             dialog.setTitle("Nuova Attività");
-            dialog.setHeaderText("Inserisci i dati della task");
+            dialog.setHeaderText("Inserisci i dettagli completi dell'attività");
 
             TextField txtTitolo = new TextField();
-            txtTitolo.setPromptText("Titolo Attività");
+            txtTitolo.setPromptText("Titolo (obbligatorio)");
+
+            TextField txtDescrizione = new TextField();
+            txtDescrizione.setPromptText("Descrizione breve");
+
+            DatePicker dpScadenza = new DatePicker();
+            dpScadenza.setPromptText("Seleziona una data di scadenza");
+            dpScadenza.setPrefWidth(300);
+
+            TextField txtTipo = new TextField();
+            txtTipo.setPromptText("Tipo (es. Sviluppo, Documentazione, Bugfix)");
 
             ComboBox<String> cmbStato = new ComboBox<>();
             cmbStato.getItems().addAll("(Completata)", "(In Corso)", "(Non Iniziata)");
             cmbStato.setValue("(Non Iniziata)");
 
-            VBox content = new VBox(10, new Label("Titolo:"), txtTitolo, new Label("Stato:"), cmbStato);
+            VBox content = new VBox(10,
+                    new Label("Titolo:"), txtTitolo,
+                    new Label("Descrizione:"), txtDescrizione,
+                    new Label("Scadenza:"), dpScadenza,
+                    new Label("Tipo Task:"), txtTipo,
+                    new Label("Stato:"), cmbStato
+            );
             dialog.getDialogPane().setContent(content);
             dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
             dialog.showAndWait().ifPresent(res -> {
                 if (res == ButtonType.OK && !txtTitolo.getText().isBlank()) {
-                    // Mappiamo i testi della tendina con gli stati reali del database
                     String statoDB = "Nuova";
                     if (cmbStato.getValue().equals("(Completata)")) statoDB = "Finita";
                     else if (cmbStato.getValue().equals("(In Corso)")) statoDB = "Presa_in_carico";
 
-                    // Salvataggio reale in PostgreSQL!
+                    // Chiamiamo il metodo del controller passandogli TUTTI i parametri della UI
                     boolean successo = attivitaController.inserisciAttivita(
                             progettoSelezionato.getIdProgetto(),
                             txtTitolo.getText().trim(),
+                            txtDescrizione.getText().trim(),
+                            dpScadenza.getValue(), // Prende in automatico la data (LocalDate) o null
+                            txtTipo.getText().trim(),
                             statoDB,
                             utenteCorrente.getIdUtente()
                     );
 
                     if (successo) {
-                        // Ricarichiamo la lista dal DB per far comparire la nuova task
                         listaAttivitaUI.getItems().clear();
                         listaAttivitaUI.getItems().addAll(attivitaController.getAttivitaByProgetto(progettoSelezionato.getIdProgetto()));
                     } else {

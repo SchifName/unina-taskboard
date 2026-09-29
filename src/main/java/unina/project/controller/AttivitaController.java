@@ -37,21 +37,31 @@ public class AttivitaController {
         }
         return listaAttivita;
     }
-    public boolean inserisciAttivita(int idProgetto, String titolo, String stato, int idCreatore) {
-        String query = "INSERT INTO Attivita (id_prog, titolo, stato, id_creatore) VALUES (?, ?, ?, ?)";
+    public boolean inserisciAttivita(int idProgetto, String titolo, String descrizione, java.time.LocalDate scadenza, String tipo, String stato, int idCreatore) {
+        // Guarda il quinto e il sesto punto interrogativo: abbiamo aggiunto ::tipo_attivita e ::stato_attivita
+        String query = "INSERT INTO Attivita (id_prog, titolo, descrizione, scadenza, tipo, stato, id_creatore) VALUES (?, ?, ?, ?, ?::tipo_attivita, ?::stato_attivita, ?)";
 
-        try (Connection conn = ConnessioneDatabase.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        Connection conn = ConnessioneDatabase.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setInt(1, idProgetto);
             stmt.setString(2, titolo);
-            stmt.setString(3, stato);
-            stmt.setInt(4, idCreatore);
+            stmt.setString(3, descrizione);
+
+            if (scadenza != null) {
+                stmt.setDate(4, java.sql.Date.valueOf(scadenza));
+            } else {
+                stmt.setNull(4, java.sql.Types.DATE);
+            }
+
+            stmt.setString(5, tipo);
+            stmt.setString(6, stato);
+            stmt.setInt(7, idCreatore);
 
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("Errore inserimento attività: " + e.getMessage());
+            System.err.println("Errore inserimento attività completa: " + e.getMessage());
             return false;
         }
     }
