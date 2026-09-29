@@ -315,7 +315,7 @@ public class DashboardProgettiUI {
             root.setCenter(creaVistaStatisticheProgetto(progettoSelezionato, root, listaProgettiHome));
         });
 
-        HBox bottoniTask = new HBox(10, btnNuovaAttivita, btnScaricaFile, btnCaricaFile, btnStatisticheProgetto);
+        HBox bottoniTask = new HBox(10, btnNuovaAttivita, btnScaricaFile, btnCaricaFile, btnStorico, btnStatisticheProgetto);
         VBox boxDettaglio = new VBox(12, btnIndietro, lblTitolo, new Label("Elenco Attività:"), listaAttivitaUI, bottoniTask);
         boxDettaglio.setPadding(new Insets(15));
         return boxDettaglio;

@@ -24,7 +24,6 @@ public class LoginUI extends Application {
         txtPassword.setPromptText("Password");
 
         Button btnLogin = new Button("Accedi");
-        Button btnRegistrati = new Button("Vai alla Registrazione");
         Label lblMsg = new Label();
 
         btnLogin.setOnAction(e -> {
@@ -44,12 +43,7 @@ public class LoginUI extends Application {
             }
         });
 
-        btnRegistrati.setOnAction(e -> {
-            stage.close();
-            new RegistrazioneUI().start(new Stage());
-        });
-
-        VBox root = new VBox(10, new Label("Accedi"), txtEmail, txtPassword, btnLogin, btnRegistrati, lblMsg);
+        VBox root = new VBox(10, new Label("Accedi"), txtEmail, txtPassword, btnLogin,  lblMsg);
         root.setPadding(new Insets(20));
 
         stage.setScene(new Scene(root, 300, 300));
