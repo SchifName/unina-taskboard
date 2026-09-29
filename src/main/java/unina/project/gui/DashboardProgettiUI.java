@@ -8,13 +8,12 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import unina.project.controller.AttivitaController;
 import unina.project.controller.ProgettoController;
+import unina.project.controller.FileController;
 import unina.project.entity.Attivita;
 import unina.project.entity.Utente;
 import unina.project.entity.Progetto;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 public class DashboardProgettiUI {
     private final Utente utenteCorrente;
@@ -143,6 +142,46 @@ public class DashboardProgettiUI {
 
         Button btnNuovaAttivita = new Button("+ Nuova Attività");
         Button btnEliminaAttivita = new Button("🗑 Elimina");
+        Button btnCaricaFile = new Button("📤 Carica File");
+
+        btnCaricaFile.setOnAction(e -> {
+            // Capiamo quale attività è stata selezionata nella lista
+            Attivita taskSelezionata = listaAttivitaUI.getSelectionModel().getSelectedItem();
+
+            if (taskSelezionata == null) {
+                new Alert(Alert.AlertType.WARNING, "Devi prima selezionare un'attività dalla lista!", ButtonType.OK).showAndWait();
+                return;
+            }
+
+            // Apriamo la finestra nativa del computer per scegliere il file
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("Seleziona il file di codice da caricare");
+            File fileScelto = fileChooser.showOpenDialog(root.getScene().getWindow());
+
+            if (fileScelto != null) {
+                // Chiediamo la nota descrittiva (es. "Prima bozza", "Bug fix")
+                TextInputDialog dialogNota = new TextInputDialog("Prima versione");
+                dialogNota.setTitle("Nota Descrittiva");
+                dialogNota.setHeaderText("Inserisci una breve nota per questa revisione:");
+
+                dialogNota.showAndWait().ifPresent(nota -> {
+                    FileController fc = new FileController();
+                    boolean successo = fc.salvaFileERevisione(
+                            taskSelezionata.getIdAttivita(),
+                            utenteCorrente.getIdUtente(),
+                            fileScelto,
+                            nota
+                    );
+
+                    if (successo) {
+                        new Alert(Alert.AlertType.INFORMATION, "🎉 File salvato con successo in PostgreSQL!", ButtonType.OK).showAndWait();
+                    } else {
+                        new Alert(Alert.AlertType.ERROR, "Errore durante il salvataggio del file.", ButtonType.OK).showAndWait();
+                    }
+                });
+            }
+        });
+
         Button btnStatisticheProgetto = new Button("📈 Grafico Statistiche Progetto");
 
         btnStatisticheProgetto.setOnAction(e -> {
@@ -160,7 +199,7 @@ public class DashboardProgettiUI {
             root.setCenter(creaVistaStatisticheProgetto(progettoSelezionato, root, listaProgettiHome));
         });
 
-        HBox bottoniTask = new HBox(10, btnNuovaAttivita, btnEliminaAttivita, btnStatisticheProgetto);
+        HBox bottoniTask = new HBox(10, btnNuovaAttivita, btnEliminaAttivita, btnCaricaFile, btnStatisticheProgetto);
         VBox boxDettaglio = new VBox(12, btnIndietro, lblTitolo, new Label("Elenco Attività:"), listaAttivitaUI, bottoniTask);
         boxDettaglio.setPadding(new Insets(15));
         return boxDettaglio;
