@@ -1,4 +1,4 @@
-package unina.project.gui;
+package unina.project.database;
 
 import java.util.ArrayList;
 import java.util.HashMap;

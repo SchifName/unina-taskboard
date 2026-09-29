@@ -6,8 +6,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import unina.project.controller.AutenticazioneController;
+import unina.project.entity.Utente;
 
 public class LoginUI extends Application {
+
+    private final AutenticazioneController autenticazione = new AutenticazioneController();
+
     @Override
     public void start(Stage stage) {
         stage.setTitle("UninaTaskBoard - Login");
@@ -23,12 +28,19 @@ public class LoginUI extends Application {
         Label lblMsg = new Label();
 
         btnLogin.setOnAction(e -> {
-            if (txtEmail.getText().isEmpty() || txtPassword.getText().isEmpty()) {
+            String email = txtEmail.getText().trim();
+            String password = txtPassword.getText();
+
+            if (email.isEmpty() || password.isEmpty()) {
                 lblMsg.setText("Compila tutti i campi.");
             } else {
-                stage.close();
-                // Passa l'email inserita alla dashboard per renderla dinamica
-                new DashboardProgettiUI(txtEmail.getText()).start(new Stage());
+                Utente utenteLoggato = autenticazione.effettuaLogin(email, password);
+                if (utenteLoggato != null) {
+                    stage.close();
+                    new DashboardProgettiUI(utenteLoggato.getNomeCompleto()).start(new Stage());
+                }else{
+                    lblMsg.setText("Dati errati");
+                }
             }
         });
 
