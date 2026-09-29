@@ -55,17 +55,17 @@ public class DashboardProgettiUI {
 
         btnNuovo.setOnAction(e -> new TextInputDialog().showAndWait().ifPresent(s -> {
             if (!s.isBlank()) {
+                // Crea un progetto visivo temporaneo
                 Progetto nuovoP = new Progetto(0, s.trim(), "", utenteCorrente.getIdUtente());
                 listaProgetti.getItems().add(nuovoP);
-                mappaAttivita.put(s.trim(), new ArrayList<>());
             }
         }));
 
         btnDel.setOnAction(e -> {
             Progetto sel = listaProgetti.getSelectionModel().getSelectedItem();
             if (sel != null) {
+                // Rimuove il progetto solo dalla lista visiva
                 listaProgetti.getItems().remove(sel);
-                mappaAttivita.remove(sel.getNome());
             }
         });
 

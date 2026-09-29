@@ -131,11 +131,11 @@ INSERT INTO Membro_progetto (id_prog, id_membro) VALUES
 
 -- 4. ATTIVITÀ (Varie tipologie e stati per testare i filtri e il report)
 INSERT INTO Attivita (id_prog, titolo, descrizione, scadenza, tipo, stato, id_creatore) VALUES 
-(1, 'Progettazione DB', 'Creare lo schema SQL', '2024-10-15', 'Sviluppo', 'Finita', 1),             -- ID 1 (Prog 1)
-(1, 'Scrittura Classi Entity', 'Mappare le tabelle in Java', '2024-10-20', 'Sviluppo', 'Presa_in_carico', 1), -- ID 2 (Prog 1)
-(1, 'Manuale Utente', 'Scrivere la documentazione', '2024-11-01', 'Documentazione', 'Nuova', 1),    -- ID 3 (Prog 1)
-(2, 'Analisi Requisiti', 'Studio dei competitor', '2024-10-10', 'Studio', 'Finita', 3),             -- ID 4 (Prog 2)
-(2, 'Sviluppo Frontend', 'Creare la home in HTML', '2024-10-25', 'Sviluppo', 'Presa_in_carico', 3); -- ID 5 (Prog 2)
+(1, 'Progettazione DB', 'Creare lo schema SQL', '2026-10-15', 'Sviluppo', 'Finita', 1),             -- ID 1 (Prog 1)
+(1, 'Scrittura Classi Entity', 'Mappare le tabelle in Java', '2026-10-20', 'Sviluppo', 'Presa_in_carico', 1), -- ID 2 (Prog 1)
+(1, 'Manuale Utente', 'Scrivere la documentazione', '2026-11-01', 'Documentazione', 'Nuova', 1),    -- ID 3 (Prog 1)
+(2, 'Analisi Requisiti', 'Studio dei competitor', '2026-10-10', 'Studio', 'Finita', 3),             -- ID 4 (Prog 2)
+(2, 'Sviluppo Frontend', 'Creare la home in HTML', '2026-10-25', 'Sviluppo', 'Presa_in_carico', 3); -- ID 5 (Prog 2)
 
 -- 5. ASSEGNAZIONE MEMBRI ALLE ATTIVITÀ
 INSERT INTO Membro_attivita (id_task, id_membro) VALUES 
