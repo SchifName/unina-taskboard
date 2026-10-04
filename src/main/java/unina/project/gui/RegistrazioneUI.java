@@ -30,10 +30,34 @@ public class RegistrazioneUI extends Application {
         Label lblMsg = new Label();
 
         btnRegistra.setOnAction(e -> {
-            if (txtNome.getText().isEmpty() || txtEmail.getText().isEmpty() || txtPassword.getText().isEmpty()) {
+            String nome = txtNome.getText().trim();
+            String email = txtEmail.getText().trim();
+            String password = txtPassword.getText().trim();
+
+            // Controllo se i campi sono vuoti
+            if (nome.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                lblMsg.setStyle("-fx-text-fill: red;");
                 lblMsg.setText("Compila tutti i campi.");
+                return;
+            }
+
+            // Controllo di validazione sull'email (es. deve contenere @)
+            if (!email.contains("@")) {
+                lblMsg.setStyle("-fx-text-fill: red;");
+                lblMsg.setText("Inserisci un'email valida.");
+                return;
+            }
+
+            // Simulazione / Verifica della registrazione andata a buon fine
+            // (Qui puoi inserire la chiamata al tuo database o logica esistente)
+            boolean registrazioneRiuscita = true;
+
+            if (registrazioneRiuscita) {
+                lblMsg.setStyle("-fx-text-fill: green;");
+                lblMsg.setText("Registrazione completata con successo!");
             } else {
-                lblMsg.setText("Registrazione completata!");
+                lblMsg.setStyle("-fx-text-fill: red;");
+                lblMsg.setText("Errore durante la registrazione.");
             }
         });
 
@@ -45,7 +69,7 @@ public class RegistrazioneUI extends Application {
         VBox root = new VBox(10, new Label("Registrazione"), txtNome, txtEmail, txtPassword, boxRuolo, btnRegistra, btnTorna, lblMsg);
         root.setPadding(new Insets(20));
 
-        stage.setScene(new Scene(root, 300, 360));
+        stage.setScene(new Scene(root, 300, 380));
         stage.show();
     }
 }

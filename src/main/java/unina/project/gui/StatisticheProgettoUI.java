@@ -1,96 +1,77 @@
 package unina.project.gui;
 
 import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage.Stage;
+import unina.project.controller.AttivitaController;
+import unina.project.entity.Attivita;
+import unina.project.entity.Progetto;
+import unina.project.entity.Utente;
+
+import java.util.List;
 
 public class StatisticheProgettoUI {
+    private final Progetto progettoSelezionato;
+    private final Utente utenteCorrente;
+    private final AttivitaController attivitaController = new AttivitaController();
 
-    public void start(Stage stage) {
-        stage.setTitle("UninaTaskBoard - Statistiche e Report");
-        BorderPane root = new BorderPane();
+    public StatisticheProgettoUI(Progetto progetto, Utente utente) {
+        this.progettoSelezionato = progetto;
+        this.utenteCorrente = utente;
+    }
 
-        // 1. MENU LATERALE (Coerente con il resto dell'applicazione)
-        String stileMenu = "-fx-background-color: transparent; -fx-text-fill: #61dafb; -fx-cursor: hand; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-padding: 5;";
-        Button btnProgetti = new Button("📁 Progetti");
-        Button btnProfilo = new Button("👤 Profilo");
-        Button btnReport = new Button("📊 Report");
-        Button btnImpostazioni = new Button("⚙️ Impostazioni");
-        Button btnEsci = new Button("🚪 Esci");
+    public ScrollPane creaVistaStatistiche(BorderPane root, ListView<Progetto> listaProgettiHome) {
+        Label lblTitolo = new Label("📊 Report e Grafico a Cerchio - " + progettoSelezionato.getNome());
+        lblTitolo.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;");
 
-        for (Button b : new Button[]{btnProgetti, btnProfilo, btnReport, btnImpostazioni, btnEsci}) {
-            b.setStyle(stileMenu);
-        }
-
-        btnEsci.setOnAction(e -> {
-            stage.close();
-            new LoginUI().start(new Stage());
+        Button btnTorna = new Button("⬅ Torna alle Attività");
+        btnTorna.setOnAction(e -> {
+            DettaglioProgettoUI dettaglioUI = new DettaglioProgettoUI(progettoSelezionato, utenteCorrente);
+            root.setCenter(dettaglioUI.creaVistaDettaglio(root, listaProgettiHome));
         });
 
-        Label lblMenu = new Label("MENU");
-        lblMenu.setStyle("-fx-text-fill: #ffffff; -fx-font-weight: bold;");
-        VBox sidebar = new VBox(12, lblMenu, new Separator(), btnProgetti, btnProfilo, btnReport, btnImpostazioni, new Separator(), btnEsci);
-        sidebar.setPadding(new Insets(15));
-        sidebar.setStyle("-fx-background-color: #1a1a1a;");
+        List<Attivita> attivita = attivitaController.getAttivitaByProgetto(progettoSelezionato.getIdProgetto());
 
-        // 2. CREAZIONE DEL GRAFICO A BARRE (con altezza fissa per non sovrapporsi)
-        CategoryAxis xAxis = new CategoryAxis();
-        xAxis.setLabel("Stato Attività");
-        NumberAxis yAxis = new NumberAxis();
-        yAxis.setLabel("Quantità");
+        int c = 0, ic = 0, ni = 0;
+        StringBuilder completateNomi = new StringBuilder();
+        StringBuilder inCorsoNomi = new StringBuilder();
+        StringBuilder nonIniziateNomi = new StringBuilder();
 
-        BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
-        barChart.setTitle("Report Statistiche Generali");
-        barChart.setPrefHeight(240);
-        barChart.setMaxHeight(240);
+        for (Attivita task : attivita) {
+            if ("Finita".equals(task.getStato())) {
+                c++;
+                completateNomi.append("• ").append(task).append("\n");
+            } else if ("Presa_in_carico".equals(task.getStato())) {
+                ic++;
+                inCorsoNomi.append("• ").append(task).append("\n");
+            } else {
+                ni++;
+                nonIniziateNomi.append("• ").append(task).append("\n");
+            }
+        }
 
-        XYChart.Series<String, Number> serie = new XYChart.Series<>();
-        serie.setName("Task");
-        serie.getData().add(new XYChart.Data<>("Completate", 3));
-        serie.getData().add(new XYChart.Data<>("In Corso", 3));
-        serie.getData().add(new XYChart.Data<>("Non Iniziate", 2));
-        barChart.getData().add(serie);
+        // Configurazione del Grafico a Cerchio (PieChart)
+        PieChart pieChart = new PieChart();
+        pieChart.setTitle("Distribuzione Stati Attività");
+        if (c > 0) pieChart.getData().add(new PieChart.Data("Completate (" + c + ")", c));
+        if (ic > 0) pieChart.getData().add(new PieChart.Data("In Corso (" + ic + ")", ic));
+        if (ni > 0) pieChart.getData().add(new PieChart.Data("Non Iniziate (" + ni + ")", ni));
+        pieChart.setPrefSize(400, 250);
 
-        // 3. RIQUADRO CON I NOMI DEI RESPONSABILI (Posizionato sotto al grafico)
-        Label lblDettaglioNomi = new Label(
-                "📋 Dettaglio Responsabili per Stato:\n" +
-                        "• Completate: Mario Rossi, Anna Verdi, Luigi Bianchi\n" +
-                        "• In Corso: Mario Rossi, Luigi Bianchi, Giulia Neri\n" +
-                        "• Non Iniziate: Anna Verdi, Giulia Neri"
+        TextArea txtDettagli = new TextArea(
+                "✅ COMPLETATE (" + c + "):\n" + (completateNomi.length() > 0 ? completateNomi.toString() : "Nessuna\n") + "\n\n" +
+                        "⏳ IN CORSO (" + ic + "):\n" + (inCorsoNomi.length() > 0 ? inCorsoNomi.toString() : "Nessuna\n") + "\n\n" +
+                        "❌ NUOVE (" + ni + "):\n" + (nonIniziateNomi.length() > 0 ? nonIniziateNomi.toString() : "Nessuna\n")
         );
-        lblDettaglioNomi.setStyle(
-                "-fx-font-size: 13px; " +
-                        "-fx-text-fill: #1e293b; " +
-                        "-fx-padding: 12; " +
-                        "-fx-background-color: #ffffff; " +
-                        "-fx-border-color: #cbd5e1; " +
-                        "-fx-border-radius: 6px; " +
-                        "-fx-background-radius: 6px;"
-        );
-        lblDettaglioNomi.setWrapText(true);
+        txtDettagli.setEditable(false);
+        txtDettagli.setPrefHeight(180);
 
-        // 4. ASSEMBLAGGIO FINALE DEL PANNELLO REPORT
-        Label lblTitoloReport = new Label("Report e Statistiche Avanzate");
-        lblTitoloReport.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
+        VBox box = new VBox(15, btnTorna, lblTitolo, pieChart, new Label("Dettaglio Attività per Stato:"), txtDettagli);
+        box.setPadding(new Insets(15));
 
-        VBox boxReportCentrale = new VBox(15, lblTitoloReport, barChart, lblDettaglioNomi);
-        boxReportCentrale.setPadding(new Insets(20));
-        boxReportCentrale.setStyle("-fx-background-color: #f8fafc;");
-
-        // Inseriamo in un ScrollPane per evitare qualsiasi problema di visualizzazione su schermi piccoli
-        ScrollPane scrollPane = new ScrollPane(boxReportCentrale);
+        ScrollPane scrollPane = new ScrollPane(box);
         scrollPane.setFitToWidth(true);
-
-        root.setLeft(sidebar);
-        root.setCenter(scrollPane);
-
-        stage.setScene(new Scene(root, 900, 600));
-        stage.show();
+        return scrollPane;
     }
 }
