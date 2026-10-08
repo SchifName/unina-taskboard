@@ -11,13 +11,13 @@ import java.sql.SQLException;
 public class AutenticazioneController {
 
     // Questo metodo interroga il DB. Se le credenziali sono corrette,
-    // restituisce un vero oggetto Utente, altrimenti restituisce null.
+    // restituisce un oggetto Utente, altrimenti restituisce null.
     public Utente effettuaLogin(String email, String password) {
         String query = "SELECT * FROM Utente WHERE email = ? AND password_utente = ?";
-        Connection conn = ConnessioneDatabase.getConnection();
+        Connection connessione = ConnessioneDatabase.getConnection();
 
-        // Usiamo PreparedStatement per evitare attacchi SQL Injection (molto apprezzato dai prof!)
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        // Usiamo PreparedStatement per evitare attacchi SQL Injection
+        try (PreparedStatement stmt = connessione.prepareStatement(query)) {
 
             // Sostituiamo i "?" nella query con i parametri inseriti dall'utente
             stmt.setString(1, email);
