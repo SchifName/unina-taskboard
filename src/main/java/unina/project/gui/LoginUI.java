@@ -24,6 +24,10 @@ public class LoginUI extends Application {
         txtPassword.setPromptText("Password");
 
         Button btnLogin = new Button("Accedi");
+
+        // NUOVO PULSANTE
+        Button btnRegistrati = new Button("Registrati");
+
         Label lblMsg = new Label();
 
         btnLogin.setOnAction(e -> {
@@ -34,16 +38,33 @@ public class LoginUI extends Application {
                 lblMsg.setText("Compila tutti i campi.");
             } else {
                 Utente utenteLoggato = autenticazione.effettuaLogin(email, password);
+
                 if (utenteLoggato != null) {
                     stage.close();
                     new DashboardProgettiUI(utenteLoggato).start(new Stage());
-                }else{
+                } else {
                     lblMsg.setText("Dati errati");
                 }
             }
         });
 
-        VBox root = new VBox(10, new Label("Accedi"), txtEmail, txtPassword, btnLogin,  lblMsg);
+        // AZIONE DEL PULSANTE REGISTRATI
+        btnRegistrati.setOnAction(e -> {
+            stage.close();
+            new RegistrazioneUI().start(new Stage());
+        });
+
+        // AGGIUNTO btnRegistrati AL VBox
+        VBox root = new VBox(
+                10,
+                new Label("Accedi"),
+                txtEmail,
+                txtPassword,
+                btnLogin,
+                btnRegistrati,
+                lblMsg
+        );
+
         root.setPadding(new Insets(20));
 
         stage.setScene(new Scene(root, 300, 300));
