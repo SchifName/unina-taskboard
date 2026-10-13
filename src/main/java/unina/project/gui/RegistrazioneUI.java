@@ -33,6 +33,7 @@ public class RegistrazioneUI extends Application {
             String nome = txtNome.getText().trim();
             String email = txtEmail.getText().trim();
             String password = txtPassword.getText().trim();
+            String ruolo = boxRuolo.getValue(); // <-- Lettura del ruolo selezionato
 
             // Controllo se i campi sono vuoti
             if (nome.isEmpty() || email.isEmpty() || password.isEmpty()) {
@@ -49,12 +50,12 @@ public class RegistrazioneUI extends Application {
             }
 
             // Simulazione / Verifica della registrazione andata a buon fine
-            // (Qui puoi inserire la chiamata al tuo database o logica esistente)
+            // (Qui puoi inserire la chiamata al tuo database o logica esistente passando la variabile 'ruolo')
             boolean registrazioneRiuscita = true;
 
             if (registrazioneRiuscita) {
                 lblMsg.setStyle("-fx-text-fill: green;");
-                lblMsg.setText("Registrazione completata con successo!");
+                lblMsg.setText("Registrazione completata con successo come " + ruolo + "!");
             } else {
                 lblMsg.setStyle("-fx-text-fill: red;");
                 lblMsg.setText("Errore durante la registrazione.");
