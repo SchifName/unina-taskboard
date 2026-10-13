@@ -72,7 +72,7 @@ public class DashboardProgettiUI {
         Label lblProfTitolo = new Label("Profilo Utente");
         lblProfTitolo.setStyle(stileTitolo);
         Label lblNome = new Label("Nome: " + utenteCorrente.getNomeCompleto());
-        Label lblRuolo = new Label("Ruolo: N/D");
+        Label lblRuolo = new Label("Ruolo: " + utenteCorrente.getRuolo());
         Label lblEmail = new Label("Email: " + utenteCorrente.getEmail());
         for(Label l : new Label[]{lblNome, lblRuolo, lblEmail}) l.setStyle(stileCeleste);
 
