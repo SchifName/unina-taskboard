@@ -86,7 +86,6 @@ public class DashboardProgettiUI {
         CheckBox chkDark = new CheckBox("Modalità Oscura");
         Slider sliderZoom = new Slider(10, 20, 12);
         chkDark.setStyle(stileCeleste);
-
         Runnable aggiornaTema = () -> {
             boolean dark = chkDark.isSelected();
             String bg = dark ? "-fx-background-color: #2b2b2b;" : "-fx-background-color: #ffffff;";
