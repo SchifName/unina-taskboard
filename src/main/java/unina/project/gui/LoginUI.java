@@ -29,7 +29,6 @@ public class LoginUI extends Application {
         Button btnRegistrati = new Button("Registrati");
 
         Label lblMsg = new Label();
-
         btnLogin.setOnAction(e -> {
             String email = txtEmail.getText().trim();
             String password = txtPassword.getText();
