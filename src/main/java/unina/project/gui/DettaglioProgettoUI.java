@@ -3,34 +3,35 @@ package unina.project.gui;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
 import unina.project.controller.AttivitaController;
 import unina.project.controller.FileController;
-import unina.project.entity.Attivita;
-import unina.project.entity.Progetto;
-import unina.project.entity.Utente;
+import unina.project.controller.ProgettoController;
 
 import java.io.File;
 import java.util.List;
 
 public class DettaglioProgettoUI {
-    private final Progetto progetto;
-    private final Utente utente;
-    private final AttivitaController attCtrl = new AttivitaController();
 
-    public DettaglioProgettoUI(Progetto progetto, Utente utente) {
-        this.progetto = progetto;
-        this.utente = utente;
+    private final ProgettoController progettoController;
+    private final AttivitaController attivitaController;
+    private final FileController fileController;
+
+    public DettaglioProgettoUI(ProgettoController progettoController, AttivitaController attivitaController, FileController fileController) {
+        this.progettoController = progettoController;
+        this.attivitaController = attivitaController;
+        this.fileController = fileController;
     }
 
-    public VBox creaVistaDettaglio(BorderPane root, ListView<Progetto> listaHome) {
-        Label lblTitolo = new Label("Progetto: " + progetto.getNome());
+    public VBox creaVistaDettaglio(BorderPane root, ListView<String> listaHome) {
+        Label lblTitolo = new Label("Progetto: " + progettoController.getNomeProgettoSelezionato());
         lblTitolo.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;");
 
         Button btnIndietro = new Button("⬅ Torna ai Progetti");
         btnIndietro.setOnAction(e -> root.setCenter(listaHome.getParent()));
 
-        ListView<Attivita> listaTask = new ListView<>();
-        listaTask.getItems().addAll(attCtrl.getAttivitaByProgetto(progetto.getIdProgetto()));
+        ListView<String> listaTask = new ListView<>();
+        listaTask.getItems().setAll(attivitaController.caricaAttivitaProgettoCorrente());
 
         Button btnNuova = new Button("+ Nuova Attività");
         Button btnCarica = new Button("📤 Carica File");
@@ -39,19 +40,19 @@ public class DettaglioProgettoUI {
         Button btnStats = new Button("📈 Grafico Statistiche Progetto");
 
         btnStorico.setOnAction(e -> {
-            Attivita sel = listaTask.getSelectionModel().getSelectedItem();
-            if (sel == null) {
+            int idx = listaTask.getSelectionModel().getSelectedIndex();
+            if (!attivitaController.selezionaAttivita(idx)) {
                 new Alert(Alert.AlertType.WARNING, "Seleziona un'attività.", ButtonType.OK).showAndWait();
                 return;
             }
-            List<String> storico = new FileController().getStoricoRevisioni(sel.getIdAttivita());
+            List<String> storico = fileController.getStoricoRevisioni();
             if (storico.isEmpty()) {
                 new Alert(Alert.AlertType.INFORMATION, "Nessun file presente.", ButtonType.OK).showAndWait();
                 return;
             }
             Dialog<Void> dlg = new Dialog<>();
             dlg.setTitle("Cronologia Revisioni");
-            dlg.setHeaderText("Storico file di: " + sel.getTitolo());
+            dlg.setHeaderText("Storico file di: " + attivitaController.getTitoloAttivitaSelezionata());
             ListView<String> lv = new ListView<>();
             lv.getItems().addAll(storico);
             lv.setPrefSize(450, 300);
@@ -66,7 +67,7 @@ public class DettaglioProgettoUI {
             TextField txtT = new TextField(); txtT.setPromptText("Titolo");
             TextField txtD = new TextField(); txtD.setPromptText("Descrizione");
             DatePicker dp = new DatePicker(); dp.setPrefWidth(300);
-            TextField txtTipo = new TextField(); txtTipo.setPromptText("Tipo");
+            TextField txtTipo = new TextField(); txtTipo.setPromptText("Tipo (Sviluppo / Documentazione / Studio)");
             ComboBox<String> cmb = new ComboBox<>();
             cmb.getItems().addAll("(Completata)", "(In Corso)", "(Non Iniziata)");
             cmb.setValue("(Non Iniziata)");
@@ -76,9 +77,8 @@ public class DettaglioProgettoUI {
 
             dlg.showAndWait().ifPresent(res -> {
                 if (res == ButtonType.OK && !txtT.getText().isBlank()) {
-                    String st = cmb.getValue().equals("(Completata)") ? "Finita" : cmb.getValue().equals("(In Corso)") ? "Presa_in_carico" : "Nuova";
-                    if (attCtrl.inserisciAttivita(progetto.getIdProgetto(), txtT.getText().trim(), txtD.getText().trim(), dp.getValue(), txtTipo.getText().trim(), st, utente.getIdUtente())) {
-                        listaTask.getItems().setAll(attCtrl.getAttivitaByProgetto(progetto.getIdProgetto()));
+                    if (attivitaController.inserisciAttivita(txtT.getText(), txtD.getText(), dp.getValue(), txtTipo.getText(), cmb.getValue())) {
+                        listaTask.getItems().setAll(attivitaController.caricaAttivitaProgettoCorrente());
                     } else {
                         new Alert(Alert.AlertType.ERROR, "Errore salvataggio.", ButtonType.OK).showAndWait();
                     }
@@ -87,37 +87,39 @@ public class DettaglioProgettoUI {
         });
 
         btnScarica.setOnAction(e -> {
-            Attivita sel = listaTask.getSelectionModel().getSelectedItem();
-            if (sel == null) {
+            int idx = listaTask.getSelectionModel().getSelectedIndex();
+            if (!attivitaController.selezionaAttivita(idx)) {
                 new Alert(Alert.AlertType.WARNING, "Seleziona un'attività.", ButtonType.OK).showAndWait();
                 return;
             }
-            FileController fc = new FileController();
-            javafx.stage.FileChooser fcDialog = new javafx.stage.FileChooser();
-            fcDialog.setInitialFileName(fc.getNomeFileOriginale(sel.getIdAttivita()));
+            FileChooser fcDialog = new FileChooser();
+            fcDialog.setInitialFileName(fileController.getNomeFileOriginale());
             File dest = fcDialog.showSaveDialog(root.getScene().getWindow());
-            if (dest != null && fc.scaricaUltimaRevisione(sel.getIdAttivita(), dest)) {
+            if (dest != null && fileController.scaricaUltimaRevisione(dest)) {
                 new Alert(Alert.AlertType.INFORMATION, "Scaricato con successo.", ButtonType.OK).showAndWait();
             }
         });
 
         btnCarica.setOnAction(e -> {
-            Attivita sel = listaTask.getSelectionModel().getSelectedItem();
-            if (sel == null) {
+            int idx = listaTask.getSelectionModel().getSelectedIndex();
+            if (!attivitaController.selezionaAttivita(idx)) {
                 new Alert(Alert.AlertType.WARNING, "Seleziona un'attività.", ButtonType.OK).showAndWait();
                 return;
             }
-            File scelto = new javafx.stage.FileChooser().showOpenDialog(root.getScene().getWindow());
+            File scelto = new FileChooser().showOpenDialog(root.getScene().getWindow());
             if (scelto != null) {
                 new TextInputDialog("Prima versione").showAndWait().ifPresent(nota -> {
-                    if (new FileController().salvaFileERevisione(sel.getIdAttivita(), utente.getIdUtente(), scelto, nota)) {
+                    if (fileController.salvaFileERevisione(scelto, nota)) {
                         new Alert(Alert.AlertType.INFORMATION, "File salvato!", ButtonType.OK).showAndWait();
                     }
                 });
             }
         });
 
-        btnStats.setOnAction(e -> root.setCenter(new StatisticheProgettoUI(progetto, utente).creaVistaStatistiche(root, listaHome)));
+        btnStats.setOnAction(e -> {
+            StatisticheProgettoUI statsUI = new StatisticheProgettoUI(progettoController, attivitaController, fileController);
+            root.setCenter(statsUI.creaVistaStatistiche(root, listaHome));
+        });
 
         VBox box = new VBox(12, btnIndietro, lblTitolo, new Label("Elenco Attività:"), listaTask, new HBox(10, btnNuova, btnScarica, btnCarica, btnStorico, btnStats));
         box.setPadding(new Insets(15));

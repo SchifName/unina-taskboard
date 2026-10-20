@@ -1,46 +1,73 @@
 package unina.project.controller;
 
-import unina.project.database.ConnessioneDatabase;
+import unina.project.dao.ProgettoDAO;
 import unina.project.entity.Progetto;
+import unina.project.entity.Utente;
+import unina.project.implementazioniPostgresDAO.ProgettoPostgresDAO;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProgettoController {
 
-    public List<Progetto> getProgettiUtente(int idUtente) {
-        List<Progetto> progetti = new ArrayList<>();
+    private final AutenticazioneController authController;
+    private final ProgettoDAO progettoDAO = new ProgettoPostgresDAO();
+    private final List<Progetto> progettiUtente = new ArrayList<>();
+    private Progetto progettoSelezionato;
 
+    public ProgettoController(AutenticazioneController authController) {
+        this.authController = authController;
+    }
 
-        String query = "SELECT p.* FROM Progetto p " +
-                "JOIN Membro_progetto mp ON p.id_progetto = mp.id_prog " +
-                "WHERE mp.id_membro = ?";
+    public List<String> caricaNomiProgettiUtente() {
+        progettiUtente.clear();
+        List<String> nomiProgetti = new ArrayList<>();
+        Utente u = authController.getUtenteCorrente();
+        if (u == null) return nomiProgetti;
 
-        Connection conn = ConnessioneDatabase.getConnection();
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        List<Progetto> dalDB = progettoDAO.getProgettiByUtente(u.getIdUtente());
+        progettiUtente.addAll(dalDB);
 
-            stmt.setInt(1, idUtente);// questo serve a dare un valore al ? nella query
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    // Crea un oggetto Entity per ogni riga trovata nel DB
-                    Progetto p = new Progetto(
-                            rs.getInt("id_progetto"),
-                            rs.getString("nome"),
-                            rs.getString("descrizione"),
-                            rs.getInt("id_creatore")
-                    );
-                    progetti.add(p);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Errore nel caricamento progetti: " + e.getMessage());
+        for (Progetto p : progettiUtente) {
+            nomiProgetti.add(p.toString());
         }
+        return nomiProgetti;
+    }
 
-        return progetti;
+    public boolean selezionaProgetto(int indice) {
+        if (indice >= 0 && indice < progettiUtente.size()) {
+            this.progettoSelezionato = progettiUtente.get(indice);
+            return true;
+        }
+        return false;
+    }
+
+    public Progetto getProgettoSelezionato() {
+        return progettoSelezionato;
+    }
+
+    public String getNomeProgettoSelezionato() {
+        return progettoSelezionato != null ? progettoSelezionato.getNome() : "";
+    }
+
+    public boolean creaNuovoProgetto(String nome, String descrizione) {
+        Utente u = authController.getUtenteCorrente();
+        if (u == null || nome == null || nome.isBlank()) return false;
+        return progettoDAO.creaProgetto(nome.trim(), descrizione != null ? descrizione.trim() : "", u.getIdUtente());
+    }
+
+    public boolean eliminaProgetto(int indice) {
+        if (indice < 0 || indice >= progettiUtente.size()) return false;
+        progettiUtente.remove(indice);
+        return true;
+    }
+
+    public String generaReportGlobale() {
+        caricaNomiProgettiUtente();
+        StringBuilder reportText = new StringBuilder();
+        for (Progetto p : progettiUtente) {
+            reportText.append("📁 Progetto: ").append(p.getNome()).append("\n\n");
+        }
+        return reportText.toString();
     }
 }

@@ -6,12 +6,34 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import unina.project.controller.AttivitaController;
 import unina.project.controller.AutenticazioneController;
-import unina.project.entity.Utente;
+import unina.project.controller.FileController;
+import unina.project.controller.ProgettoController;
 
 public class LoginUI extends Application {
 
-    private final AutenticazioneController autenticazione = new AutenticazioneController();
+    private final AutenticazioneController authController;
+    private final ProgettoController progettoController;
+    private final AttivitaController attivitaController;
+    private final FileController fileController;
+
+    // Costruttore chiamato all'avvio da Application.launch()
+    public LoginUI() {
+        this.authController = new AutenticazioneController();
+        this.progettoController = new ProgettoController(this.authController);
+        this.attivitaController = new AttivitaController(this.authController, this.progettoController);
+        this.fileController = new FileController(this.authController, this.attivitaController);
+    }
+
+    // Costruttore per restituire il controllo mantenendo le stesse istanze dei Controller
+    public LoginUI(AutenticazioneController authController, ProgettoController progettoController,
+                   AttivitaController attivitaController, FileController fileController) {
+        this.authController = authController;
+        this.progettoController = progettoController;
+        this.attivitaController = attivitaController;
+        this.fileController = fileController;
+    }
 
     @Override
     public void start(Stage stage) {
@@ -24,11 +46,9 @@ public class LoginUI extends Application {
         txtPassword.setPromptText("Password");
 
         Button btnLogin = new Button("Accedi");
-
-        // NUOVO PULSANTE
         Button btnRegistrati = new Button("Registrati");
-
         Label lblMsg = new Label();
+
         btnLogin.setOnAction(e -> {
             String email = txtEmail.getText().trim();
             String password = txtPassword.getText();
@@ -36,34 +56,25 @@ public class LoginUI extends Application {
             if (email.isEmpty() || password.isEmpty()) {
                 lblMsg.setText("Compila tutti i campi.");
             } else {
-                Utente utenteLoggato = autenticazione.effettuaLogin(email, password);
+                boolean loginOk = authController.effettuaLogin(email, password);
 
-                if (utenteLoggato != null) {
+                if (loginOk) {
                     stage.close();
-                    new DashboardProgettiUI(utenteLoggato).start(new Stage());
+                    new DashboardProgettiUI(authController, progettoController, attivitaController, fileController)
+                            .start(new Stage());
                 } else {
                     lblMsg.setText("Dati errati");
                 }
             }
         });
 
-        // AZIONE DEL PULSANTE REGISTRATI
         btnRegistrati.setOnAction(e -> {
             stage.close();
-            new RegistrazioneUI().start(new Stage());
+            new RegistrazioneUI(authController, progettoController, attivitaController, fileController)
+                    .start(new Stage());
         });
 
-        // AGGIUNTO btnRegistrati AL VBox
-        VBox root = new VBox(
-                10,
-                new Label("Accedi"),
-                txtEmail,
-                txtPassword,
-                btnLogin,
-                btnRegistrati,
-                lblMsg
-        );
-
+        VBox root = new VBox(10, new Label("Accedi"), txtEmail, txtPassword, btnLogin, btnRegistrati, lblMsg);
         root.setPadding(new Insets(20));
 
         stage.setScene(new Scene(root, 300, 300));

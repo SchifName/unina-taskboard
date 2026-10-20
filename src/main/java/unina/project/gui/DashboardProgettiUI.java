@@ -5,18 +5,24 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import unina.project.controller.AttivitaController;
+import unina.project.controller.AutenticazioneController;
+import unina.project.controller.FileController;
 import unina.project.controller.ProgettoController;
-import unina.project.entity.Progetto;
-import unina.project.entity.Utente;
-
-import java.util.List;
 
 public class DashboardProgettiUI {
-    private final Utente utenteCorrente;
-    private final ProgettoController progettoController = new ProgettoController();
 
-    public DashboardProgettiUI(Utente utente){
-        this.utenteCorrente = utente;
+    private final AutenticazioneController authController;
+    private final ProgettoController progettoController;
+    private final AttivitaController attivitaController;
+    private final FileController fileController;
+
+    public DashboardProgettiUI(AutenticazioneController authController, ProgettoController progettoController,
+                               AttivitaController attivitaController, FileController fileController) {
+        this.authController = authController;
+        this.progettoController = progettoController;
+        this.attivitaController = attivitaController;
+        this.fileController = fileController;
     }
 
     public void start(Stage stage) {
@@ -24,9 +30,8 @@ public class DashboardProgettiUI {
         BorderPane root = new BorderPane();
 
         // 1. PANNELLO PROGETTI
-        ListView<Progetto> listaProgetti = new ListView<>();
-        List<Progetto> progettiDalDB = progettoController.getProgettiUtente(utenteCorrente.getIdUtente());
-        listaProgetti.getItems().addAll(progettiDalDB);
+        ListView<String> listaProgetti = new ListView<>();
+        listaProgetti.getItems().setAll(progettoController.caricaNomiProgettiUtente());
 
         String stileCeleste = "-fx-text-fill: #61dafb;";
         String stileTitolo = "-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;";
@@ -37,10 +42,9 @@ public class DashboardProgettiUI {
         Button btnDel = new Button("🗑 Elimina");
 
         Runnable apriProgettoSelezionato = () -> {
-            Progetto sel = listaProgetti.getSelectionModel().getSelectedItem();
-            if (sel != null) {
-                // Delega l'apertura alla classe dedicata DettaglioProgettoUI
-                DettaglioProgettoUI dettaglioUI = new DettaglioProgettoUI(sel, utenteCorrente);
+            int idx = listaProgetti.getSelectionModel().getSelectedIndex();
+            if (progettoController.selezionaProgetto(idx)) {
+                DettaglioProgettoUI dettaglioUI = new DettaglioProgettoUI(progettoController, attivitaController, fileController);
                 root.setCenter(dettaglioUI.creaVistaDettaglio(root, listaProgetti));
             } else {
                 new Alert(Alert.AlertType.WARNING, "Seleziona prima un progetto da aprire.", ButtonType.OK).showAndWait();
@@ -51,16 +55,15 @@ public class DashboardProgettiUI {
         listaProgetti.setOnMouseClicked(e -> { if (e.getClickCount() == 2) apriProgettoSelezionato.run(); });
 
         btnNuovo.setOnAction(e -> new TextInputDialog().showAndWait().ifPresent(s -> {
-            if (!s.isBlank()) {
-                Progetto nuovoP = new Progetto(0, s.trim(), "", utenteCorrente.getIdUtente());
-                listaProgetti.getItems().add(nuovoP);
+            if (!s.isBlank() && progettoController.creaNuovoProgetto(s.trim(), "")) {
+                listaProgetti.getItems().setAll(progettoController.caricaNomiProgettiUtente());
             }
         }));
 
         btnDel.setOnAction(e -> {
-            Progetto sel = listaProgetti.getSelectionModel().getSelectedItem();
-            if (sel != null) {
-                listaProgetti.getItems().remove(sel);
+            int idx = listaProgetti.getSelectionModel().getSelectedIndex();
+            if (progettoController.eliminaProgetto(idx)) {
+                listaProgetti.getItems().remove(idx);
             }
         });
 
@@ -68,19 +71,15 @@ public class DashboardProgettiUI {
         VBox boxProgetti = new VBox(10, new Label("I Miei Progetti (Doppio click per aprire)"), bottoniProgetti, listaProgetti);
         boxProgetti.setPadding(new Insets(15));
 
-        // 2. PANNELLO PROFILO
+        // 2. PANNELLO PROFILO (Dati chiesti al Controller senza toccare l'Entity Utente)
         Label lblProfTitolo = new Label("Profilo Utente");
         lblProfTitolo.setStyle(stileTitolo);
-        Label lblNome = new Label("Nome: " + utenteCorrente.getNomeCompleto());
-        Label lblRuolo = new Label("Ruolo: " + utenteCorrente.getRuolo());
-        Label lblEmail = new Label("Email: " + utenteCorrente.getEmail());
-        for(Label l : new Label[]{lblNome, lblRuolo, lblEmail}) l.setStyle(stileCeleste);
+        Label lblNome = new Label("Nome: " + authController.getNomeCompletoUtente());
+        Label lblEmail = new Label("Email: " + authController.getEmailUtente());
+        for (Label l : new Label[]{lblNome, lblEmail}) l.setStyle(stileCeleste);
 
-        VBox boxProfilo = new VBox(10, lblProfTitolo, lblNome, lblRuolo, lblEmail);
+        VBox boxProfilo = new VBox(10, lblProfTitolo, lblNome, lblEmail);
         boxProfilo.setPadding(new Insets(15));
-
-        // 3. PANNELLO REPORT GLOBALE (Delegato a un metodo di supporto)
-        VBox boxReport = creaVistaReportGlobale();
 
         // 4. PANNELLO IMPOSTAZIONI
         CheckBox chkDark = new CheckBox("Modalità Oscura");
@@ -110,7 +109,11 @@ public class DashboardProgettiUI {
         bProf.setOnAction(e -> root.setCenter(boxProfilo));
         bRep.setOnAction(e -> root.setCenter(creaVistaReportGlobale()));
         bSet.setOnAction(e -> root.setCenter(boxImpostazioni));
-        bEsc.setOnAction(e -> { stage.close(); new LoginUI().start(new Stage()); });
+        bEsc.setOnAction(e -> {
+            authController.effettuaLogout();
+            stage.close();
+            new LoginUI(authController, progettoController, attivitaController, fileController).start(new Stage());
+        });
 
         VBox sidebar = new VBox(12, new Label("MENU"), new Separator(), bP, bProf, bRep, bSet, new Separator(), bEsc);
         sidebar.setPadding(new Insets(15));
@@ -126,19 +129,12 @@ public class DashboardProgettiUI {
     private VBox creaVistaReportGlobale() {
         Label lbl = new Label("📊 Report Globale di Tutti i Progetti");
         lbl.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;");
-        StringBuilder reportText = new StringBuilder();
 
-        List<Progetto> progettiUtente = progettoController.getProgettiUtente(utenteCorrente.getIdUtente());
-        for (Progetto p : progettiUtente) {
-            reportText.append("📁 Progetto: ").append(p.getNome()).append("\n");
-            reportText.append("\n");
-        }
-
-        TextArea txtReport = new TextArea(reportText.toString());
+        TextArea txtReport = new TextArea(progettoController.generaReportGlobale());
         txtReport.setEditable(false);
         txtReport.setPrefHeight(350);
 
-        VBox box = new VBox(15, lbl, new Label("Elenco completo attività e relativi responsabili:"), txtReport);
+        VBox box = new VBox(15, lbl, new Label("Elenco completo progetti:"), txtReport);
         box.setPadding(new Insets(15));
         return box;
     }

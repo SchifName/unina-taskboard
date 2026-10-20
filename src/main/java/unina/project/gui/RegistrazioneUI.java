@@ -1,19 +1,38 @@
 package unina.project.gui;
 
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import unina.project.controller.AttivitaController;
+import unina.project.controller.AutenticazioneController;
+import unina.project.controller.FileController;
+import unina.project.controller.ProgettoController;
 
-public class RegistrazioneUI extends Application {
-    @Override
+public class RegistrazioneUI {
+
+    private final AutenticazioneController authController;
+    private final ProgettoController progettoController;
+    private final AttivitaController attivitaController;
+    private final FileController fileController;
+
+    public RegistrazioneUI(AutenticazioneController authController, ProgettoController progettoController,
+                           AttivitaController attivitaController, FileController fileController) {
+        this.authController = authController;
+        this.progettoController = progettoController;
+        this.attivitaController = attivitaController;
+        this.fileController = fileController;
+    }
+
     public void start(Stage stage) {
         stage.setTitle("UninaTaskBoard - Registrazione");
 
         TextField txtNome = new TextField();
-        txtNome.setPromptText("Nome e Cognome");
+        txtNome.setPromptText("Nome");
+
+        TextField txtCognome = new TextField();
+        txtCognome.setPromptText("Cognome");
 
         TextField txtEmail = new TextField();
         txtEmail.setPromptText("Email (@unina.it)");
@@ -31,31 +50,27 @@ public class RegistrazioneUI extends Application {
 
         btnRegistra.setOnAction(e -> {
             String nome = txtNome.getText().trim();
+            String cognome = txtCognome.getText().trim();
             String email = txtEmail.getText().trim();
             String password = txtPassword.getText().trim();
-            String ruolo = boxRuolo.getValue(); // <-- Lettura del ruolo selezionato
 
-            // Controllo se i campi sono vuoti
             if (nome.isEmpty() || email.isEmpty() || password.isEmpty()) {
                 lblMsg.setStyle("-fx-text-fill: red;");
                 lblMsg.setText("Compila tutti i campi.");
                 return;
             }
 
-            // Controllo di validazione sull'email (es. deve contenere @)
             if (!email.contains("@")) {
                 lblMsg.setStyle("-fx-text-fill: red;");
                 lblMsg.setText("Inserisci un'email valida.");
                 return;
             }
 
-            // Simulazione / Verifica della registrazione andata a buon fine
-            // (Qui puoi inserire la chiamata al tuo database o logica esistente passando la variabile 'ruolo')
-            boolean registrazioneRiuscita = true;
+            boolean registrazioneRiuscita = authController.registraUtente(email, password, nome, cognome);
 
             if (registrazioneRiuscita) {
                 lblMsg.setStyle("-fx-text-fill: green;");
-                lblMsg.setText("Registrazione completata con successo come " + ruolo + "!");
+                lblMsg.setText("Registrazione completata con successo");
             } else {
                 lblMsg.setStyle("-fx-text-fill: red;");
                 lblMsg.setText("Errore durante la registrazione.");
@@ -64,7 +79,8 @@ public class RegistrazioneUI extends Application {
 
         btnTorna.setOnAction(e -> {
             stage.close();
-            new LoginUI().start(new Stage());
+            new LoginUI(authController, progettoController, attivitaController, fileController)
+                    .start(new Stage());
         });
 
         VBox root = new VBox(10, new Label("Registrazione"), txtNome, txtEmail, txtPassword, boxRuolo, btnRegistra, btnTorna, lblMsg);
