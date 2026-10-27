@@ -34,6 +34,7 @@ public class DettaglioProgettoUI {
         listaTask.getItems().setAll(attivitaController.caricaAttivitaProgettoCorrente());
 
         Button btnNuova = new Button("+ Nuova Attività");
+        Button btnInvita = new Button("Invita Membro");
         Button btnCarica = new Button("📤 Carica File");
         Button btnScarica = new Button("📥 Scarica Ultimo File");
         Button btnStorico = new Button("📜 Storico File");
@@ -121,7 +122,37 @@ public class DettaglioProgettoUI {
             root.setCenter(statsUI.creaVistaStatistiche(root, listaHome));
         });
 
-        VBox box = new VBox(12, btnIndietro, lblTitolo, new Label("Elenco Attività:"), listaTask, new HBox(10, btnNuova, btnScarica, btnCarica, btnStorico, btnStats));
+        btnInvita.setOnAction(event -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Invita Membro");
+            dialog.setHeaderText("Aggiungi un collaboratore al progetto");
+            dialog.setContentText("Inserisci l'email dell'utente registrato:");
+
+            dialog.showAndWait().ifPresent(email -> {
+                if (!email.isBlank()) {
+                    // Deleghiamo l'operazione al Controller
+                    unina.project.controller.EsitoInvito esito = progettoController.invitaMembro(email);
+
+                    // Gestiamo i vari casi con dei pop-up di avviso
+                    switch (esito) {
+                        case SUCCESSO:
+                            new Alert(Alert.AlertType.INFORMATION, "Utente aggiunto con successo al progetto!", ButtonType.OK).showAndWait();
+                            break;
+                        case UTENTE_NON_TROVATO:
+                            new Alert(Alert.AlertType.WARNING, "Nessun utente trovato con questa email.", ButtonType.OK).showAndWait();
+                            break;
+                        case GIA_MEMBRO:
+                            new Alert(Alert.AlertType.INFORMATION, "L'utente fa già parte di questo progetto.", ButtonType.OK).showAndWait();
+                            break;
+                        default:
+                            new Alert(Alert.AlertType.ERROR, "Errore durante l'invito. Riprova.", ButtonType.OK).showAndWait();
+                            break;
+                    }
+                }
+            });
+        });
+
+        VBox box = new VBox(12, btnIndietro, lblTitolo, new Label("Elenco Attività:"), listaTask, new HBox(10, btnNuova,btnInvita, btnScarica, btnCarica, btnStorico, btnStats));
         box.setPadding(new Insets(15));
         return box;
     }

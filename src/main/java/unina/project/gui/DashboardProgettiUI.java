@@ -17,8 +17,7 @@ public class DashboardProgettiUI {
     private final AttivitaController attivitaController;
     private final FileController fileController;
 
-    public DashboardProgettiUI(AutenticazioneController authController, ProgettoController progettoController,
-                               AttivitaController attivitaController, FileController fileController) {
+    public DashboardProgettiUI(AutenticazioneController authController, ProgettoController progettoController, AttivitaController attivitaController, FileController fileController) {
         this.authController = authController;
         this.progettoController = progettoController;
         this.attivitaController = attivitaController;
@@ -54,11 +53,45 @@ public class DashboardProgettiUI {
         btnApri.setOnAction(e -> apriProgettoSelezionato.run());
         listaProgetti.setOnMouseClicked(e -> { if (e.getClickCount() == 2) apriProgettoSelezionato.run(); });
 
-        btnNuovo.setOnAction(e -> new TextInputDialog().showAndWait().ifPresent(s -> {
-            if (!s.isBlank() && progettoController.creaNuovoProgetto(s.trim(), "")) {
-                listaProgetti.getItems().setAll(progettoController.caricaNomiProgettiUtente());
-            }
-        }));
+        btnNuovo.setOnAction(event -> {
+            Dialog<String[]> dialog = new Dialog<>();
+            dialog.setTitle("NUOVO PROGETTO");
+            dialog.setHeaderText("Inserisci i dati del nuovo progetto");
+
+            Label lblNome = new Label("Nome del progetto:");
+            TextField txtNome = new TextField();
+            lblNome.setText("Es. Esame 001");
+
+            Label lblDescrizione = new Label("Descrizione:");
+            TextField txtDescrizione = new TextField();
+            lblDescrizione.setText("Breve descrizione...");
+
+            VBox Contenuto = new VBox(10);
+            Contenuto.getChildren().addAll(lblNome, txtNome, lblDescrizione, txtDescrizione);
+            dialog.getDialogPane().setContent(Contenuto);
+
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+            dialog.setResultConverter(dialogButton -> {
+                if(dialogButton.equals(ButtonType.OK)){
+                    return new String[]{
+                            txtNome.getText().trim(),
+                            txtDescrizione.getText().trim()
+                    };
+                }
+                return null;
+            });
+
+            dialog.showAndWait().ifPresent(risultato -> {
+                String nome = risultato[0];
+                String descrizione = risultato[1];
+
+                // Validazione e chiamata al controller (che comunica poi con il DB)
+                if (!nome.isBlank() && progettoController.creaNuovoProgetto(nome, descrizione)) {
+                    listaProgetti.getItems().setAll(progettoController.caricaNomiProgettiUtente());
+                }
+            });
+
+        });
 
         btnDel.setOnAction(e -> {
             int idx = listaProgetti.getSelectionModel().getSelectedIndex();

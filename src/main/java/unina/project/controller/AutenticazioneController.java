@@ -14,7 +14,7 @@ public class AutenticazioneController {
         return this.utenteCorrente != null;
     }
 
-    public boolean registraUtente(String email, String password, String nome, String cognome) {
+    public RisultatoRegistrazione registraUtente(String email, String password, String nome, String cognome) {
         return utenteDAO.registraUtente(email, password, nome, cognome);
     }
 

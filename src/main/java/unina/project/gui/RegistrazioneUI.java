@@ -5,10 +5,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import unina.project.controller.AttivitaController;
-import unina.project.controller.AutenticazioneController;
-import unina.project.controller.FileController;
-import unina.project.controller.ProgettoController;
+import unina.project.controller.*;
 
 public class RegistrazioneUI {
 
@@ -35,14 +32,10 @@ public class RegistrazioneUI {
         txtCognome.setPromptText("Cognome");
 
         TextField txtEmail = new TextField();
-        txtEmail.setPromptText("Email (@unina.it)");
+        txtEmail.setPromptText("Email (@studenti.unina.it)");
 
         PasswordField txtPassword = new PasswordField();
         txtPassword.setPromptText("Password");
-
-        ChoiceBox<String> boxRuolo = new ChoiceBox<>();
-        boxRuolo.getItems().addAll("Studente", "Docente");
-        boxRuolo.setValue("Studente");
 
         Button btnRegistra = new Button("Registrati");
         Button btnTorna = new Button("Torna al Login");
@@ -54,26 +47,35 @@ public class RegistrazioneUI {
             String email = txtEmail.getText().trim();
             String password = txtPassword.getText().trim();
 
-            if (nome.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            if (nome.isEmpty() || cognome.isEmpty() || email.isEmpty() || password.isEmpty()) {
                 lblMsg.setStyle("-fx-text-fill: red;");
                 lblMsg.setText("Compila tutti i campi.");
                 return;
             }
 
-            if (!email.contains("@")) {
+            if (!email.contains("@studenti.unina.it")) {
                 lblMsg.setStyle("-fx-text-fill: red;");
                 lblMsg.setText("Inserisci un'email valida.");
                 return;
             }
 
-            boolean registrazioneRiuscita = authController.registraUtente(email, password, nome, cognome);
+            RisultatoRegistrazione esitoRegistrazione = authController.registraUtente(email, password, nome, cognome);
 
-            if (registrazioneRiuscita) {
-                lblMsg.setStyle("-fx-text-fill: green;");
-                lblMsg.setText("Registrazione completata con successo");
-            } else {
-                lblMsg.setStyle("-fx-text-fill: red;");
-                lblMsg.setText("Errore durante la registrazione.");
+            switch (esitoRegistrazione) {
+                case SUCCESSO:
+                    lblMsg.setStyle("-fx-text-fill: green;");
+                    lblMsg.setText("Registrazione completata con successo");
+                    break;
+
+                case ERR_EMAIL:
+                    lblMsg.setStyle("-fx-text-fill: red;");
+                    lblMsg.setText("Attenzione: Questa email è già registrata.");
+                    break;
+
+                default:
+                    lblMsg.setStyle("-fx-text-fill: red;");
+                    lblMsg.setText("Errore durante la registrazione.");
+                    break;
             }
         });
 
@@ -83,7 +85,7 @@ public class RegistrazioneUI {
                     .start(new Stage());
         });
 
-        VBox root = new VBox(10, new Label("Registrazione"), txtNome, txtEmail, txtPassword, boxRuolo, btnRegistra, btnTorna, lblMsg);
+        VBox root = new VBox(10, new Label("Registrazione"), txtNome, txtCognome, txtEmail, txtPassword, btnRegistra, btnTorna, lblMsg);
         root.setPadding(new Insets(20));
 
         stage.setScene(new Scene(root, 300, 380));

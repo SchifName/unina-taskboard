@@ -80,4 +80,21 @@ public class ProgettoPostgresDAO implements ProgettoDAO {
         }
         return false;
     }
+
+    @Override
+    public boolean aggiungiMembro(int idProgetto, int idUtente) {
+        String query = "INSERT INTO Membro_progetto (id_prog, id_membro) VALUES (?, ?)";
+        Connection conn = ConnessioneDatabase.getConnection();
+
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, idProgetto);
+            stmt.setInt(2, idUtente);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            if (!"23505".equals(e.getSQLState())) {
+                System.err.println("Errore aggiunta membro nel DAO: " + e.getMessage());
+            }
+            return false;
+        }
+    }
 }

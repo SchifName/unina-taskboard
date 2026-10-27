@@ -1,4 +1,6 @@
-package unina.project.gui;
+package unina.project;
+
+import unina.project.gui.LoginUI;
 
 public class Main {
     public static void main(String[] args) {
