@@ -24,6 +24,8 @@ public class DettaglioProgettoUI {
     }
 
     public VBox creaVistaDettaglio(BorderPane root, ListView<String> listaHome) {
+        VBox box = new VBox(12);
+        box.setPadding(new Insets(15));
         Label lblTitolo = new Label("Progetto: " + progettoController.getNomeProgettoSelezionato());
         lblTitolo.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;");
 
@@ -35,32 +37,18 @@ public class DettaglioProgettoUI {
 
         Button btnNuova = new Button("+ Nuova Attività");
         Button btnInvita = new Button("Invita Membro");
-        Button btnCarica = new Button("📤 Carica File");
-        Button btnScarica = new Button("📥 Scarica Ultimo File");
-        Button btnStorico = new Button("📜 Storico File");
+        Button btnApriAttivita = new Button("Apri Dettaglio Attività");
         Button btnStats = new Button("📈 Grafico Statistiche Progetto");
 
-        btnStorico.setOnAction(e -> {
+        Runnable apriAttivita = () -> {
             int idx = listaTask.getSelectionModel().getSelectedIndex();
-            if (!attivitaController.selezionaAttivita(idx)) {
-                new Alert(Alert.AlertType.WARNING, "Seleziona un'attività.", ButtonType.OK).showAndWait();
-                return;
+            if (attivitaController.selezionaAttivita(idx)) {
+               DettaglioAttivitaUI dettaglioAttivitaUI = new DettaglioAttivitaUI(progettoController, attivitaController, fileController);
+                root.setCenter(dettaglioAttivitaUI.creaVistaDettaglio(root, box));
+            } else {
+                new Alert(Alert.AlertType.WARNING, "Seleziona prima un'attività dalla lista.", ButtonType.OK).showAndWait();
             }
-            List<String> storico = fileController.getStoricoRevisioni();
-            if (storico.isEmpty()) {
-                new Alert(Alert.AlertType.INFORMATION, "Nessun file presente.", ButtonType.OK).showAndWait();
-                return;
-            }
-            Dialog<Void> dlg = new Dialog<>();
-            dlg.setTitle("Cronologia Revisioni");
-            dlg.setHeaderText("Storico file di: " + attivitaController.getTitoloAttivitaSelezionata());
-            ListView<String> lv = new ListView<>();
-            lv.getItems().addAll(storico);
-            lv.setPrefSize(450, 300);
-            dlg.getDialogPane().setContent(lv);
-            dlg.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-            dlg.showAndWait();
-        });
+        };
 
         btnNuova.setOnAction(e -> {
             Dialog<ButtonType> dlg = new Dialog<>();
@@ -85,36 +73,6 @@ public class DettaglioProgettoUI {
                     }
                 }
             });
-        });
-
-        btnScarica.setOnAction(e -> {
-            int idx = listaTask.getSelectionModel().getSelectedIndex();
-            if (!attivitaController.selezionaAttivita(idx)) {
-                new Alert(Alert.AlertType.WARNING, "Seleziona un'attività.", ButtonType.OK).showAndWait();
-                return;
-            }
-            FileChooser fcDialog = new FileChooser();
-            fcDialog.setInitialFileName(fileController.getNomeFileOriginale());
-            File dest = fcDialog.showSaveDialog(root.getScene().getWindow());
-            if (dest != null && fileController.scaricaUltimaRevisione(dest)) {
-                new Alert(Alert.AlertType.INFORMATION, "Scaricato con successo.", ButtonType.OK).showAndWait();
-            }
-        });
-
-        btnCarica.setOnAction(e -> {
-            int idx = listaTask.getSelectionModel().getSelectedIndex();
-            if (!attivitaController.selezionaAttivita(idx)) {
-                new Alert(Alert.AlertType.WARNING, "Seleziona un'attività.", ButtonType.OK).showAndWait();
-                return;
-            }
-            File scelto = new FileChooser().showOpenDialog(root.getScene().getWindow());
-            if (scelto != null) {
-                new TextInputDialog("Prima versione").showAndWait().ifPresent(nota -> {
-                    if (fileController.salvaFileERevisione(scelto, nota)) {
-                        new Alert(Alert.AlertType.INFORMATION, "File salvato!", ButtonType.OK).showAndWait();
-                    }
-                });
-            }
         });
 
         btnStats.setOnAction(e -> {
@@ -152,8 +110,12 @@ public class DettaglioProgettoUI {
             });
         });
 
-        VBox box = new VBox(12, btnIndietro, lblTitolo, new Label("Elenco Attività:"), listaTask, new HBox(10, btnNuova,btnInvita, btnScarica, btnCarica, btnStorico, btnStats));
-        box.setPadding(new Insets(15));
+        btnApriAttivita.setOnAction(event -> { apriAttivita.run();});
+        listaTask.setOnMouseClicked(event -> { if (event.getClickCount() == 2) apriAttivita.run();});
+
+        HBox bottoni = new HBox(10, btnNuova, btnInvita, btnApriAttivita, btnStats);
+        box.getChildren().addAll(btnIndietro, lblTitolo, new Label("Elenco Attività:"), listaTask, bottoni);
+
         return box;
     }
 }

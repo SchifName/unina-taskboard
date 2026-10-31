@@ -78,6 +78,10 @@ public class AttivitaController {
         caricaAttivitaProgettoCorrente();
     }
 
+    public boolean aggiornaStatoAttivita(String stato){
+        return false;
+    }
+
     public int getNumeroCompletate() {
         int count = 0;
         for (Attivita a : listaAttivita) {

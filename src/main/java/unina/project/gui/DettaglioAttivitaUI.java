@@ -42,7 +42,7 @@ public class DettaglioAttivitaUI {
         btnAggiornaStato.setOnAction(e -> {
             if (cmbStato.getValue() != null) {
                 // Metodo da aggiungere in AttivitaController:
-                // attivitaController.aggiornaStatoAttivita(cmbStato.getValue());
+                attivitaController.aggiornaStatoAttivita(cmbStato.getValue());
                 new Alert(Alert.AlertType.INFORMATION, "Stato aggiornato con successo!", ButtonType.OK).showAndWait();
             }
         });

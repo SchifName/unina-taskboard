@@ -71,4 +71,19 @@ public class AttivitaPostgresDAO implements AttivitaDAO {
             return false;
         }
     }
+
+    @Override
+    public boolean aggiornaStatoAttivita(int idAttivita, String stato) {
+        String query = "UPDATE Attivita SET stato = ?::stato_attivita WHERE id_attivita = ?";
+        Connection connessione = ConnessioneDatabase.getConnection();
+
+        try (PreparedStatement stmt = connessione.prepareStatement(query)) {
+            stmt.setString(1, stato);
+            stmt.setInt(2, idAttivita);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Errore aggiornamento stato nel DAO: " + e.getMessage());
+            return false;
+        }
+    }
 }
