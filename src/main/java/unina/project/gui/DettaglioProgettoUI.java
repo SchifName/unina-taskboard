@@ -30,6 +30,7 @@ public class DettaglioProgettoUI {
         btnIndietro.setOnAction(e -> root.setCenter(listaHome.getParent()));
 
         ListView<Attivita> listaTask = new ListView<>();
+        // Nota: se progetto.getIdProgetto() dà errore, prova progetto.getId()
         listaTask.getItems().addAll(attCtrl.getAttivitaByProgetto(progetto.getIdProgetto()));
 
         Button btnNuova = new Button("+ Nuova Attività");
@@ -44,7 +45,11 @@ public class DettaglioProgettoUI {
                 new Alert(Alert.AlertType.WARNING, "Seleziona un'attività.", ButtonType.OK).showAndWait();
                 return;
             }
-            List<String> storico = new FileController().getStoricoRevisioni(sel.getIdAttivita());
+
+            // NOTA: se sel.getIdAttivita() ti dà errore rosso, cambialo in sel.getId()
+            int idTask = sel.getIdAttivita();
+
+            List<String> storico = new FileController().getStoricoRevisioni(idTask);
             if (storico.isEmpty()) {
                 new Alert(Alert.AlertType.INFORMATION, "Nessun file presente.", ButtonType.OK).showAndWait();
                 return;
@@ -67,17 +72,44 @@ public class DettaglioProgettoUI {
             TextField txtD = new TextField(); txtD.setPromptText("Descrizione");
             DatePicker dp = new DatePicker(); dp.setPrefWidth(300);
             TextField txtTipo = new TextField(); txtTipo.setPromptText("Tipo");
-            ComboBox<String> cmb = new ComboBox<>();
-            cmb.getItems().addAll("(Completata)", "(In Corso)", "(Non Iniziata)");
-            cmb.setValue("(Non Iniziata)");
 
-            dlg.getDialogPane().setContent(new VBox(10, new Label("Titolo:"), txtT, new Label("Descrizione:"), txtD, new Label("Scadenza:"), dp, new Label("Tipo:"), txtTipo, new Label("Stato:"), cmb));
+            ComboBox<String> cmbStato = new ComboBox<>();
+            cmbStato.getItems().addAll("(Completata)", "(In Corso)", "(Non Iniziata)");
+            cmbStato.setValue("(Non Iniziata)");
+
+            ComboBox<String> cmbPriorita = new ComboBox<>();
+            cmbPriorita.getItems().addAll("Alta", "Media", "Bassa");
+            cmbPriorita.setValue("Media");
+
+            dlg.getDialogPane().setContent(new VBox(10,
+                    new Label("Titolo:"), txtT,
+                    new Label("Descrizione:"), txtD,
+                    new Label("Scadenza:"), dp,
+                    new Label("Tipo:"), txtTipo,
+                    new Label("Stato:"), cmbStato,
+                    new Label("Priorità:"), cmbPriorita
+            ));
             dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
             dlg.showAndWait().ifPresent(res -> {
                 if (res == ButtonType.OK && !txtT.getText().isBlank()) {
-                    String st = cmb.getValue().equals("(Completata)") ? "Finita" : cmb.getValue().equals("(In Corso)") ? "Presa_in_carico" : "Nuova";
-                    if (attCtrl.inserisciAttivita(progetto.getIdProgetto(), txtT.getText().trim(), txtD.getText().trim(), dp.getValue(), txtTipo.getText().trim(), st, utente.getIdUtente())) {
+                    String st = cmbStato.getValue().equals("(Completata)") ? "Finita" : cmbStato.getValue().equals("(In Corso)") ? "Presa_in_carico" : "Nuova";
+                    String prioritaScelta = cmbPriorita.getValue();
+
+                    // NOTA: Se il tuo AttivitaController non accetta la priorità (dà errore),
+                    // rimuovi ", prioritaScelta" dalla riga sottostante.
+                    boolean inserito = attCtrl.inserisciAttivita(
+                            progetto.getIdProgetto(),
+                            txtT.getText().trim(),
+                            txtD.getText().trim(),
+                            dp.getValue(),
+                            txtTipo.getText().trim(),
+                            st,
+                            utente.getIdUtente(),
+                            prioritaScelta
+                    );
+
+                    if (inserito) {
                         listaTask.getItems().setAll(attCtrl.getAttivitaByProgetto(progetto.getIdProgetto()));
                     } else {
                         new Alert(Alert.AlertType.ERROR, "Errore salvataggio.", ButtonType.OK).showAndWait();
@@ -92,11 +124,12 @@ public class DettaglioProgettoUI {
                 new Alert(Alert.AlertType.WARNING, "Seleziona un'attività.", ButtonType.OK).showAndWait();
                 return;
             }
+            int idTask = sel.getIdAttivita(); // Usa sel.getId() se necessario
             FileController fc = new FileController();
             javafx.stage.FileChooser fcDialog = new javafx.stage.FileChooser();
-            fcDialog.setInitialFileName(fc.getNomeFileOriginale(sel.getIdAttivita()));
+            fcDialog.setInitialFileName(fc.getNomeFileOriginale(idTask));
             File dest = fcDialog.showSaveDialog(root.getScene().getWindow());
-            if (dest != null && fc.scaricaUltimaRevisione(sel.getIdAttivita(), dest)) {
+            if (dest != null && fc.scaricaUltimaRevisione(idTask, dest)) {
                 new Alert(Alert.AlertType.INFORMATION, "Scaricato con successo.", ButtonType.OK).showAndWait();
             }
         });
@@ -107,10 +140,11 @@ public class DettaglioProgettoUI {
                 new Alert(Alert.AlertType.WARNING, "Seleziona un'attività.", ButtonType.OK).showAndWait();
                 return;
             }
+            int idTask = sel.getIdAttivita(); // Usa sel.getId() se necessario
             File scelto = new javafx.stage.FileChooser().showOpenDialog(root.getScene().getWindow());
             if (scelto != null) {
                 new TextInputDialog("Prima versione").showAndWait().ifPresent(nota -> {
-                    if (new FileController().salvaFileERevisione(sel.getIdAttivita(), utente.getIdUtente(), scelto, nota)) {
+                    if (new FileController().salvaFileERevisione(idTask, utente.getIdUtente(), scelto, nota)) {
                         new Alert(Alert.AlertType.INFORMATION, "File salvato!", ButtonType.OK).showAndWait();
                     }
                 });

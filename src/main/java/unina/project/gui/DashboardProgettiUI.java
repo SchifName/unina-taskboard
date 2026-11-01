@@ -5,7 +5,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import unina.project.controller.AttivitaController;
+import unina.project.controller.NotificaController;
 import unina.project.controller.ProgettoController;
+import unina.project.entity.Attivita;
 import unina.project.entity.Progetto;
 import unina.project.entity.Utente;
 
@@ -14,6 +17,8 @@ import java.util.List;
 public class DashboardProgettiUI {
     private final Utente utenteCorrente;
     private final ProgettoController progettoController = new ProgettoController();
+    private final AttivitaController attivitaController = new AttivitaController();
+    private final NotificaController notificaController = new NotificaController();
 
     public DashboardProgettiUI(Utente utente){
         this.utenteCorrente = utente;
@@ -28,6 +33,20 @@ public class DashboardProgettiUI {
         List<Progetto> progettiDalDB = progettoController.getProgettiUtente(utenteCorrente.getIdUtente());
         listaProgetti.getItems().addAll(progettiDalDB);
 
+        // --- CONTROLLO NOTIFICHE SCADENZE IMMINENTI ALL'AVVIO ---
+        for (Progetto p : progettiDalDB) {
+            List<Attivita> taskProgetto = attivitaController.getAttivitaByProgetto(p.getIdProgetto());
+            List<String> avvisi = notificaController.controllaScadenzeImminenti(utenteCorrente.getIdUtente(), taskProgetto);
+
+            for (String avviso : avvisi) {
+                Alert alert = new Alert(Alert.AlertType.WARNING, avviso, ButtonType.OK);
+                alert.setTitle("Notifica Scadenza - " + p.getNome());
+                alert.setHeaderText("Attenzione!");
+                alert.showAndWait();
+            }
+        }
+        // --------------------------------------------------------
+
         String stileCeleste = "-fx-text-fill: #61dafb;";
         String stileTitolo = "-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;";
 
@@ -39,7 +58,6 @@ public class DashboardProgettiUI {
         Runnable apriProgettoSelezionato = () -> {
             Progetto sel = listaProgetti.getSelectionModel().getSelectedItem();
             if (sel != null) {
-                // Delega l'apertura alla classe dedicata DettaglioProgettoUI
                 DettaglioProgettoUI dettaglioUI = new DettaglioProgettoUI(sel, utenteCorrente);
                 root.setCenter(dettaglioUI.creaVistaDettaglio(root, listaProgetti));
             } else {
@@ -79,7 +97,7 @@ public class DashboardProgettiUI {
         VBox boxProfilo = new VBox(10, lblProfTitolo, lblNome, lblRuolo, lblEmail);
         boxProfilo.setPadding(new Insets(15));
 
-        // 3. PANNELLO REPORT GLOBALE (Delegato a un metodo di supporto)
+        // 3. PANNELLO REPORT GLOBALE
         VBox boxReport = creaVistaReportGlobale();
 
         // 4. PANNELLO IMPOSTAZIONI
