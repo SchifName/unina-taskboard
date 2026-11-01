@@ -25,6 +25,8 @@ public class Attivita {
         this.priorita = priorita;
     }
 
+      //getter
+
     public int getIdAttivita() { return idAttivita; }
     public int getIdProgetto() { return idProgetto; }
     public String getTitolo() { return titolo; }
@@ -34,6 +36,8 @@ public class Attivita {
     public String getStato() { return stato; }
     public int getIdUtenteAssegnato() { return idUtenteAssegnato; }
     public String getPriorita() { return priorita; }
+
+     //setter
 
     public void setIdAttivita(int idAttivita) { this.idAttivita = idAttivita; }
     public void setIdProgetto(int idProgetto) { this.idProgetto = idProgetto; }
