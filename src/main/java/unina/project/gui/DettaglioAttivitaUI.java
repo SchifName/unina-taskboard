@@ -29,7 +29,6 @@ public class DettaglioAttivitaUI {
         lblTitolo.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 16px;");
 
         Button btnIndietro = new Button("⬅ Torna al Progetto");
-        // Quando si torna indietro, rimettiamo al centro la vista di DettaglioProgettoUI
         btnIndietro.setOnAction(e -> root.setCenter(vistaProgettoPrecedente));
 
         // 2. GESTIONE STATO ATTIVITÀ
@@ -42,8 +41,11 @@ public class DettaglioAttivitaUI {
         btnAggiornaStato.setOnAction(e -> {
             if (cmbStato.getValue() != null) {
                 // Metodo da aggiungere in AttivitaController:
-                attivitaController.aggiornaStatoAttivita(cmbStato.getValue());
-                new Alert(Alert.AlertType.INFORMATION, "Stato aggiornato con successo!", ButtonType.OK).showAndWait();
+                if (attivitaController.aggiornaStatoAttivita(cmbStato.getValue())){
+                    new Alert(Alert.AlertType.INFORMATION, "Stato aggiornato con successo!", ButtonType.OK).showAndWait();
+                }else{
+                    new Alert(Alert.AlertType.ERROR, "Errore: impossibile aggiornare lo stato", ButtonType.OK).showAndWait();
+                }
             }
         });
         boxStato.getChildren().addAll(lblStato, cmbStato, btnAggiornaStato);

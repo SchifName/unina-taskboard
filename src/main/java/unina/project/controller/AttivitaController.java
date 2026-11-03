@@ -79,7 +79,7 @@ public class AttivitaController {
     }
 
     public boolean aggiornaStatoAttivita(String stato){
-        return false;
+        return attivitaDAO.aggiornaStatoAttivita(attivitaSelezionata.getIdAttivita(), stato);
     }
 
     public int getNumeroCompletate() {
