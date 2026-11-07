@@ -45,7 +45,6 @@ public class DashboardProgettiUI {
                 alert.showAndWait();
             }
         }
-        // --------------------------------------------------------
 
         String stileCeleste = "-fx-text-fill: #61dafb;";
         String stileTitolo = "-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;";

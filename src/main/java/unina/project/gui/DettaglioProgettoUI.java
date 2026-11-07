@@ -46,7 +46,7 @@ public class DettaglioProgettoUI {
                 return;
             }
 
-            // NOTA: se sel.getIdAttivita() ti dà errore rosso, cambialo in sel.getId()
+
             int idTask = sel.getIdAttivita();
 
             List<String> storico = new FileController().getStoricoRevisioni(idTask);
@@ -96,8 +96,7 @@ public class DettaglioProgettoUI {
                     String st = cmbStato.getValue().equals("(Completata)") ? "Finita" : cmbStato.getValue().equals("(In Corso)") ? "Presa_in_carico" : "Nuova";
                     String prioritaScelta = cmbPriorita.getValue();
 
-                    // NOTA: Se il tuo AttivitaController non accetta la priorità (dà errore),
-                    // rimuovi ", prioritaScelta" dalla riga sottostante.
+
                     boolean inserito = attCtrl.inserisciAttivita(
                             progetto.getIdProgetto(),
                             txtT.getText().trim(),
