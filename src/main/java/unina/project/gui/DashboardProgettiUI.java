@@ -33,7 +33,7 @@ public class DashboardProgettiUI {
         List<Progetto> progettiDalDB = progettoController.getProgettiUtente(utenteCorrente.getIdUtente());
         listaProgetti.getItems().addAll(progettiDalDB);
 
-        // --- CONTROLLO NOTIFICHE SCADENZE IMMINENTI ALL'AVVIO ---
+        //  CONTROLLO NOTIFICHE SCADENZE IMMINENTI ALL'AVVIO
         for (Progetto p : progettiDalDB) {
             List<Attivita> taskProgetto = attivitaController.getAttivitaByProgetto(p.getIdProgetto());
             List<String> avvisi = notificaController.controllaScadenzeImminenti(utenteCorrente.getIdUtente(), taskProgetto);
