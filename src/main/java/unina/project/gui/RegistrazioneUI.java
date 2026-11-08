@@ -1,8 +1,11 @@
 package unina.project.gui;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import unina.project.controller.*;
@@ -25,21 +28,43 @@ public class RegistrazioneUI {
     public void start(Stage stage) {
         stage.setTitle("UninaTaskBoard - Registrazione");
 
+        Scene scene;
+
+        Label lblTitolo = new Label("REGISTRATI");
+        lblTitolo.getStyleClass().add("titolo");
+
         TextField txtNome = new TextField();
         txtNome.setPromptText("Nome");
+        txtNome.getStyleClass().add("testo");
 
         TextField txtCognome = new TextField();
         txtCognome.setPromptText("Cognome");
+        txtCognome.getStyleClass().add("testo");
 
         TextField txtEmail = new TextField();
         txtEmail.setPromptText("Email (@studenti.unina.it)");
+        txtEmail.getStyleClass().add("testo");
 
         PasswordField txtPassword = new PasswordField();
         txtPassword.setPromptText("Password");
+        txtPassword.getStyleClass().add("testo");
 
         Button btnRegistra = new Button("Registrati");
+        btnRegistra.getStyleClass().add("bottoni");
         Button btnTorna = new Button("Torna al Login");
-        Label lblMsg = new Label();
+        btnTorna.getStyleClass().add("bottoni");
+
+        Alert errore = new Alert(Alert.AlertType.ERROR);
+        errore.setTitle("Errore di registrazione");
+        errore.setHeaderText("");
+
+        Alert successo = new Alert(Alert.AlertType.INFORMATION);
+        successo.setTitle("Successo");
+        successo.setHeaderText("");
+
+        HBox btns;
+        VBox logup;
+        StackPane root;
 
         btnRegistra.setOnAction(e -> {
             String nome = txtNome.getText().trim();
@@ -48,14 +73,14 @@ public class RegistrazioneUI {
             String password = txtPassword.getText().trim();
 
             if (nome.isEmpty() || cognome.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                lblMsg.setStyle("-fx-text-fill: red;");
-                lblMsg.setText("Compila tutti i campi.");
+                errore.setContentText("Compila tutti i campi");
+                errore.showAndWait();
                 return;
             }
 
             if (!email.contains("@studenti.unina.it")) {
-                lblMsg.setStyle("-fx-text-fill: red;");
-                lblMsg.setText("Inserisci un'email valida.");
+                errore.setContentText("Inserisci l'email universitaria");
+                errore.showAndWait();
                 return;
             }
 
@@ -63,18 +88,21 @@ public class RegistrazioneUI {
 
             switch (esitoRegistrazione) {
                 case SUCCESSO:
-                    lblMsg.setStyle("-fx-text-fill: green;");
-                    lblMsg.setText("Registrazione completata con successo");
+                    successo.setContentText("Registrazione completata verrai reindirizzato alla pagina di LOGIN");
+                    successo.showAndWait();
+                    stage.close();
+                    new LoginUI(authController, progettoController, attivitaController, fileController)
+                            .start(new Stage());
                     break;
 
                 case ERR_EMAIL:
-                    lblMsg.setStyle("-fx-text-fill: red;");
-                    lblMsg.setText("Attenzione: Questa email è già registrata.");
+                    errore.setContentText("Attenzione email già in uso");
+                    errore.showAndWait();
                     break;
 
                 default:
-                    lblMsg.setStyle("-fx-text-fill: red;");
-                    lblMsg.setText("Errore durante la registrazione.");
+                    errore.setContentText("Errore durante la registrazione");
+                    errore.showAndWait();
                     break;
             }
         });
@@ -85,10 +113,22 @@ public class RegistrazioneUI {
                     .start(new Stage());
         });
 
-        VBox root = new VBox(10, new Label("Registrazione"), txtNome, txtCognome, txtEmail, txtPassword, btnRegistra, btnTorna, lblMsg);
-        root.setPadding(new Insets(20));
+        btns = new HBox(20, btnRegistra, btnTorna);
+        btns.setAlignment(Pos.CENTER);
 
-        stage.setScene(new Scene(root, 300, 380));
+        logup = new VBox(20, lblTitolo, txtNome, txtCognome, txtEmail, txtPassword, btns);
+        logup.setAlignment(Pos.CENTER);
+        logup.setMaxHeight(250);
+        logup.setMaxWidth(350);
+        logup.setPadding(new Insets(30));
+        logup.getStyleClass().add("card");
+
+        root = new StackPane(logup);
+        root.getStyleClass().add("sfondo");
+
+        scene = new Scene(root, 800, 500);
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        stage.setScene(scene);
         stage.show();
     }
 }

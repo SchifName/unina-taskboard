@@ -1,0 +1,27 @@
+.titolo {
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-font-size: 20px;
+}
+
+.testo {
+    -fx-background-color : #676f9d;
+}
+
+.bottoni {
+    -fx-background-color : #f9b17a;
+}
+
+.sfondo {
+    -fx-background-color: #2d3250;
+}
+
+.card {
+    -fx-background-color: #424769;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 15, 0, 0, 8);
+}
+
+.schermata {
+    -fx-background-color: #424769;
+}

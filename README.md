@@ -20,23 +20,23 @@ L'interfaccia utente è stata progettata partendo da mockup ad alta fedeltà per
 
 ### 1. Autenticazione
 Schermata di login per l'accesso sicuro tramite credenziali universitarie.
-![Login](img/LOGIN.png)
+![Login](src/main/resources/img/LOGIN.png)
 
 ### 2. Dashboard Principale
 Layout strutturato con Sidebar laterale per la navigazione rapida tra i moduli del sistema.
-![Dashboard](img/Dashboard.png)
+![Dashboard](src/main/resources/img/Dashboard.png)
 
 ### 3. Gestione Progetti
 Vista aggregata per consultare e gestire i progetti assegnati all'utente.
-![Progetti](img/Progetto.png)
+![Progetti](src/main/resources/img/Progetto.png)
 
 ### 4. Dettaglio Attività (Task)
 Pannello per la gestione granulare delle attività, con funzionalità di inserimento, cambio di stato e gestione dei file allegati.
-![Attività](img/Attivita.png)
+![Attività](src/main/resources/img/Attivita.png)
 
 ### 5. Statistiche
 Visualizzazione analitica dell'andamento dei progetti tramite componenti grafici interattivi.
-![Grafico](img/Grafico.png)
+![Grafico](src/main/resources/img/Grafico.png)
 
 ---
 

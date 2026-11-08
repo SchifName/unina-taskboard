@@ -10,6 +10,8 @@ import unina.project.controller.AutenticazioneController;
 import unina.project.controller.FileController;
 import unina.project.controller.ProgettoController;
 
+import java.util.Stack;
+
 public class DashboardProgettiUI {
 
     private final AutenticazioneController authController;
@@ -26,19 +28,29 @@ public class DashboardProgettiUI {
 
     public void start(Stage stage) {
         stage.setTitle("UninaTaskBoard - Dashboard");
+
+        Scene scene;
         BorderPane root = new BorderPane();
 
-        // 1. PANNELLO PROGETTI
-        ListView<String> listaProgetti = new ListView<>();
-        listaProgetti.getItems().setAll(progettoController.caricaNomiProgettiUtente());
+        StackPane schermataProgetti;
+        HBox bottoniProgetti;
+        VBox boxProgetti;
 
         String stileCeleste = "-fx-text-fill: #61dafb;";
         String stileTitolo = "-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 14px;";
 
         Button btnApri = new Button("📂 Apri");
+        btnApri.getStyleClass().add("bottoni");
         Button btnNuovo = new Button("+ Nuovo");
+        btnNuovo.getStyleClass().add("bottoni");
         Button btnMod = new Button("✏️ Modifica");
+        btnMod.getStyleClass().add("bottoni");
         Button btnDel = new Button("🗑 Elimina");
+        btnDel.getStyleClass().add("bottoni");
+
+        // 1. PANNELLO PROGETTI
+        ListView<String> listaProgetti = new ListView<>();
+        listaProgetti.getItems().setAll(progettoController.caricaNomiProgettiUtente());
 
         Runnable apriProgettoSelezionato = () -> {
             int idx = listaProgetti.getSelectionModel().getSelectedIndex();
@@ -100,9 +112,13 @@ public class DashboardProgettiUI {
             }
         });
 
-        HBox bottoniProgetti = new HBox(10, btnApri, btnNuovo, btnMod, btnDel);
-        VBox boxProgetti = new VBox(10, new Label("I Miei Progetti (Doppio click per aprire)"), bottoniProgetti, listaProgetti);
+        bottoniProgetti = new HBox(10, btnApri, btnNuovo, btnMod, btnDel);
+        Label titoloProgetti = new Label("I Miei Progetti (Doppio click per aprire)");
+        titoloProgetti.getStyleClass().add("titolo");
+        boxProgetti = new VBox(10, titoloProgetti, bottoniProgetti, listaProgetti);
         boxProgetti.setPadding(new Insets(15));
+        schermataProgetti = new StackPane(boxProgetti);
+        schermataProgetti.getStyleClass().add("schermata");
 
         // 2. PANNELLO PROFILO (Dati chiesti al Controller senza toccare l'Entity Utente)
         Label lblProfTitolo = new Label("Profilo Utente");
@@ -115,7 +131,7 @@ public class DashboardProgettiUI {
         boxProfilo.setPadding(new Insets(15));
 
         // 4. PANNELLO IMPOSTAZIONI
-        CheckBox chkDark = new CheckBox("Modalità Oscura");
+        /*CheckBox chkDark = new CheckBox("Modalità Oscura");
         Slider sliderZoom = new Slider(10, 20, 12);
         chkDark.setStyle(stileCeleste);
         Runnable aggiornaTema = () -> {
@@ -127,35 +143,39 @@ public class DashboardProgettiUI {
         sliderZoom.valueProperty().addListener(e -> aggiornaTema.run());
 
         VBox boxImpostazioni = new VBox(10, new Label("Impostazioni"), chkDark, new Label("Zoom Testo:"), sliderZoom);
-        boxImpostazioni.setPadding(new Insets(15));
+        boxImpostazioni.setPadding(new Insets(15));*/
 
         // 5. MENU LATERALE (Sidebar)
         String styleBtn = "-fx-background-color: transparent; -fx-text-fill: #61dafb; -fx-cursor: hand; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT;";
         Button bP = new Button("📁 Progetti");
         Button bProf = new Button("👤 Profilo");
         Button bRep = new Button("📊 Report");
-        Button bSet = new Button("⚙️ Impostazioni");
+        //Button bSet = new Button("⚙️ Impostazioni");
         Button bEsc = new Button("🚪 Esci");
-        for (Button b : new Button[]{bP, bProf, bRep, bSet, bEsc}) b.setStyle(styleBtn);
+        for (Button b : new Button[]{bP, bProf, bRep, bEsc}) b.getStyleClass().add("bottoni"); //bottone impostazione rimosso
 
-        bP.setOnAction(e -> root.setCenter(boxProgetti));
+        bP.setOnAction(e -> root.setCenter(schermataProgetti));
         bProf.setOnAction(e -> root.setCenter(boxProfilo));
         bRep.setOnAction(e -> root.setCenter(creaVistaReportGlobale()));
-        bSet.setOnAction(e -> root.setCenter(boxImpostazioni));
+        //bSet.setOnAction(e -> root.setCenter(boxImpostazioni));
         bEsc.setOnAction(e -> {
             authController.effettuaLogout();
             stage.close();
             new LoginUI(authController, progettoController, attivitaController, fileController).start(new Stage());
         });
 
-        VBox sidebar = new VBox(12, new Label("MENU"), new Separator(), bP, bProf, bRep, bSet, new Separator(), bEsc);
+        Label titoloSidebar = new Label("MENU");
+        titoloSidebar.getStyleClass().add("titolo");
+        VBox sidebar = new VBox(12, titoloSidebar, new Separator(), bP, bProf, bRep, new Separator(), bEsc); //bottone impostazioni rimosso
         sidebar.setPadding(new Insets(15));
-        sidebar.setStyle("-fx-background-color: #1a1a1a;");
+        sidebar.getStyleClass().add("sfondo");
 
         root.setLeft(sidebar);
-        root.setCenter(boxProgetti);
+        root.setCenter(schermataProgetti);
 
-        stage.setScene(new Scene(root, 900, 550));
+        scene = new Scene(root, 900, 550);
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        stage.setScene(scene);
         stage.show();
     }
 

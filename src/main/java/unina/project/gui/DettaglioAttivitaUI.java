@@ -24,12 +24,13 @@ public class DettaglioAttivitaUI {
     }
 
     public VBox creaVistaDettaglio(BorderPane root, VBox vistaProgettoPrecedente) {
-        // 1. INTESTAZIONE E TASTO INDIETRO
         Label lblTitolo = new Label("Dettaglio Attività: " + attivitaController.getTitoloAttivitaSelezionata());
         lblTitolo.setStyle("-fx-text-fill: #61dafb; -fx-font-weight: bold; -fx-font-size: 16px;");
 
         Button btnIndietro = new Button("⬅ Torna al Progetto");
         btnIndietro.setOnAction(e -> root.setCenter(vistaProgettoPrecedente));
+
+        //Alert Inf = new Alert(Alert.AlertType.NONE);
 
         // 2. GESTIONE STATO ATTIVITÀ
         HBox boxStato = new HBox(10);
